@@ -61,9 +61,14 @@ file_MESSENGER_data = '/Users/bowersch/Desktop/MESSENGER Data/mess-mag-calibrate
 def shade_in_transitions(transitions,ax,df):
     
     '''Shade in time series with Mercury's plasma environment determined by Sun2023'''
+    
+    #Form vertical array for vertical bars
     y=np.array([-1000,1000])
     
+    #Define colors for magnetosphere, magnetosheath, solar wind, bow shock, mangetopause
     colors=['firebrick','royalblue','gold','orange','mediumpurple']
+    
+    # Define transparency for each color, has to be different for aesthetic reasons
     ALPH=[.08,.08,.08,.08,.18]
     
     for i in range(len(transitions)-1):
@@ -76,14 +81,23 @@ def shade_in_transitions(transitions,ax,df):
 def generate_crossing_dataframe(cross,typ):
     
     '''Create dataframe with all boundary crossings from Sun2023 list
+        input a crossing array from read_Wejie_files()
+        typ is the type of the crossing (mp_in,bs_in,mp_out or bs_out)
+    
         
+        Returns dataframe version of the crossings
     '''
+    
+    #
     import numpy as np
     import pandas as pd
     from trying3 import convert_to_datetime
     
+    # Start of crossing
     cross_start=cross[0,:]
     
+    
+    #End of crossing
     cross_end=cross[1,:]
     
     cs=np.array([convert_to_datetime(d) for d in cross_start])
@@ -97,21 +111,40 @@ def generate_crossing_dataframe(cross,typ):
     
     return cross_df
 def read_in_Weijie_files():
+    ''' 
+    
+        Read in Sun2023 boundary crossing list specified by the file_bs_in etc.
+    
+        Outputs arrays of boundary crossings for each type (mp_in,mp_out,bs_in,bs_out)
+        
+        Example: mp_in,mp_out,bs_in,bs_out=read_in_Weijie_files()
+    '''
     
     def convert_from_txt_to_date(file):
-        x_in=np.loadtxt(file,usecols=(0,1,2,3,4,5))
-        x_out=np.loadtxt(file,usecols=(6,7,8,9,10,11))
-        date_in=np.array([])
-        date_out=np.array([])
+        
+        '''
+        
+        Convert the text files into date strings in the form :
+            
+            Year-Month-Day Hour/Minute/Second
+        
+        
+        '''
+        x_in = np.loadtxt(file,usecols=(0,1,2,3,4,5))
+        x_out = np.loadtxt(file,usecols=(6,7,8,9,10,11))
+        date_in = np.array([])
+        date_out = np.array([])
+        
         for i in range(np.size(x_in[:,0])):
             
             if int(np.floor(x_in[i,5])) >= 60:
-                x_in[i,5]=0.0
-                x_in[i,4]=x_in[i,4]+1
+                
+                x_in[i,5] = 0.0
+                x_in[i,4] = x_in[i,4]+1
                 
             if int(np.floor(x_out[i,5])) >= 60:
-                x_out[i,5]=0.0
-                x_out[i,4]=x_out[i,4]+1
+                x_out[i,5] = 0.0
+                x_out[i,4] = x_out[i,4]+1
                 
             if int(np.floor(x_out[i,5])) < 0:
                 x_out[i,5]=59
@@ -174,15 +207,14 @@ def create_full_data_pickle():
     
     R_m=2440
     
+    # Get list of boundary crossings
     mp_in, mp_out, bs_in, bs_out = read_in_Weijie_files()
     
+    # List of days per month
+    
     month=[31,28,31,30,31,30,31,31,30,31,30,31]
-        
-        #month=[10]
-        #m_number=['05']
-        
-        
-        # Data gaps=
+    
+    #Problematic dates
     data_gaps=['2012-06-9','2012-06-10','2012-06-11','2012-06-12', \
                    '2012-06-13','2013-01-8','2013-01-9','2013-02-28', \
                        '2011-04-5','2011-05-24','2011-05-25','2011-05-26',\
@@ -190,9 +222,9 @@ def create_full_data_pickle():
                           '2011-05-31','2011-06-1','2011-06-2','2011-06-3','2014-12-26']
             
     
-    
     years=['2011','2012','2013','2014','2015']
     
+    # Define empty arrays
     
     ephx_total=np.array([])
     
@@ -236,22 +268,21 @@ def create_full_data_pickle():
             
         
             for j in range(start,mk+1):
-                    #j=j+1
-                    
-                    
-                    
+                  
                 date_string=i+'-'+mn+'-'+str(j)
                     
                 if date_string not in data_gaps:
                     
                     print(date_string)
                     
-                    #date_string='2015-01-11'
-                    
+                    # Load in the time, mag and ephemeris data from PDS downloaded files
                     
                     time,mag,magamp,eph=load_MESSENGER_into_tplot(date_string)
                     
+                    # Normalized by Mercury radius
                     eph=eph/R_m
+                    
+                    
                     time=np.array(time)
                     
                     time_total=np.append(time_total,time)
@@ -272,18 +303,29 @@ def create_full_data_pickle():
                     
                     magamp_total=np.append(magamp_total,magamp)
                     
-                        
+    #Create dataframe of MESSENGER data                   
     df=pd.DataFrame(data={'time':time_total,'ephx':ephx_total,'ephy':ephy_total,\
                           'ephz':ephz_total,'magx':magx_total,'magy':magy_total,\
                               'magz':magz_total,'magamp':magamp_total})
-            
+    
+    # Save all data to pickle file for future use
     pd.to_pickle(df,save_path+'full_data_2.pkl')
     
-    def assign_training_data():
-        #all_data=pd.read_pickle('/Users/bowersch/Desktop/Python_Code/MESSENGER_Lobe_Analysis/full_data.pkl')
+    def assign_plasma_env_label():
         
+        '''
+        
+        input the region of the magnetosphere MESSENGER is sampling 
+        
+        '''
+        
+        # Read in data
         all_data=pd.read_pickle(save_path+'full_data_2.pkl')
+        
+        #Get crossing arrays
         mp_in, mp_out, bs_in, bs_out = read_in_Weijie_files()
+        
+        #Generate dataframes
         mi=generate_crossing_dataframe(mp_in,'mpi')
         
         mo=generate_crossing_dataframe(mp_out,'mpo')
@@ -371,10 +413,10 @@ def create_full_data_pickle():
                 
         pd.to_pickle(all_data,save_path+'fd_prep_w_boundaries.pkl')
         
-    assign_training_data() 
+    assign_plasma_env_label() 
 
 
-def load_MESSENGER_into_tplot(date_string,res="01",full=False,FIPS=False):
+def load_MESSENGER_into_tplot(date_string,res="01",FIPS=False):
     
     ''' 
     Load a single day of MESSENGER data, from the file_MESSENGER_data file
@@ -397,14 +439,10 @@ def load_MESSENGER_into_tplot(date_string,res="01",full=False,FIPS=False):
     elif (doy<100) & (doy>=10):doy_s='0'+str(doy)
         
     else: doy_s=str(doy)
-    
-    
-    
-    #file='/Users/bowersch/Desktop/MESSENGER Data/mess-mag-calibrated avg/MAGMSOSCIAVG'+year+str(doy)+'_'+res+'_V08.TAB'
+
     
     file=file_MESSENGER_data+year+'/'+month+'/'+'MAGMSOSCIAVG'+year+doy_s+'_'+res+'_V08.TAB'
-    if full==True:
-        file='/Users/bowersch/Desktop/MESSENGER Data/mess-mag-calibrated/MAGMSOSCI'+year+str(doy)+'_V08.TAB'
+
     df = np.genfromtxt(file)
     
     hour=df[:,2]
@@ -416,6 +454,9 @@ def load_MESSENGER_into_tplot(date_string,res="01",full=False,FIPS=False):
     second=df[:,4]
     
     year=date_string[0:4]
+    
+    
+    #Get datetune from day of year
     
     doy=int(doy_s)-1
     
@@ -438,17 +479,8 @@ def load_MESSENGER_into_tplot(date_string,res="01",full=False,FIPS=False):
         
         date2.append(date+datetime.timedelta(hours=hour[i], minutes=minute[i], seconds=second[i]))
         
-    #print(date2[0])
-    
-    #time=[d.strftime("%Y-%m-%d %H:%M:%S") for d in date2]
-    
-    #print(time[0])
     
     time=date2
-    
-    #time=[d.timestamp for d in date2]
-    
-    #return time
     
     
     #Get B
@@ -490,13 +522,6 @@ def load_MESSENGER_into_tplot(date_string,res="01",full=False,FIPS=False):
     ephy=new_ephy
     
     eph=np.transpose(np.vstack((ephx,ephy,ephz)))
-    
-    if full==True:
-        mag1=df[:,9:]
-        eph=df[:,5:8]
-        ephx=df[:,5]
-        ephy=df[:,6]
-        ephz=df[:,7]
     
     #Define magnetic field amplitude
     
@@ -607,8 +632,7 @@ def generate_SW_MS_dataframe_variance(max_ang_diff):
         data
         
         This procedure requires Sun 2023 boundary crossing list and a .pkl file of
-        all relavent data for MESSENGER (full_data_2.pkl)
-    
+        all relavent data for MESSENGER (fd_prep_w_boundaries.pkl)
     
         max_ang_diff if the maximum value of alpha, the angle between the measured
         magnetosheath vector and the reference vector just downstream of the bow shock
@@ -1215,7 +1239,7 @@ def generate_SW_MS_dataframe_variance(max_ang_diff):
     
     return ms
 
-def create_and_train_ensemble_model_norm(num_models,filename,save_file_tag,emp_pred=True):
+def create_and_train_ensemble_model_norm(num_models,filename,save_file_tag,emp_pred=False):
     from sklearn.ensemble import BaggingRegressor
     from sklearn.model_selection import train_test_split
     from sklearn.preprocessing import MinMaxScaler
@@ -1237,7 +1261,7 @@ def create_and_train_ensemble_model_norm(num_models,filename,save_file_tag,emp_p
     num_models for manuscript = 100
     
     filename is the filename of the training/test dataset
-    
+    cfs
     filename for manuscript = save_path+'dataset_30_diff'
     
     save_file_tag is the tag for the model predictions
@@ -1467,7 +1491,7 @@ def create_and_train_ensemble_model_norm(num_models,filename,save_file_tag,emp_p
             #history = model.fit(X_train_rs, y_train_rs, validation_data=(X_val_normalized, y_val_normalized), epochs=50, batch_size=32)
             
             # Initialize an explainer object
-            explainer = shap.Explainer(model, X_train_rs)
+            #explainer = shap.Explainer(model, X_val_normalized)
             
             input_variables_shap=['BX','BY','BZ','|B|',"$X_{MSM'}$",'r','Theta','$R_{HC}$']
             
@@ -1476,7 +1500,7 @@ def create_and_train_ensemble_model_norm(num_models,filename,save_file_tag,emp_p
             np.save(save_path+'X_train_rs_shap.npy',X_train_rs)
             
             np.save(save_path+'X_test_rs_shap.npy',X_test)
-            X_val_df.to_pickle(save_path+'X_train_shap.pkl')
+            X_val_df.to_pickle(save_path+'X_val_shap.pkl')
             
             #breakpoint()
             # # Calculate Shapley values for the validation data
@@ -1519,13 +1543,13 @@ def create_and_train_ensemble_model_norm(num_models,filename,save_file_tag,emp_p
     
     
     save_dir = 'saved_models'
-
+    breakpoint()
     # Create the directory if it doesn't exist
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     
-    for i, model in enumerate(model):
-        model.save(save_path+save_dir+"/model_{i}.h5")
+    for i, model in enumerate(models):
+        model.save(save_path+save_dir+"f/model_{i}.h5")
     
     df_test=pd.DataFrame(data=X_test_all,columns=full_variables)
     
@@ -2056,6 +2080,94 @@ def r2_analysis_exploration():
     
     format_plot(r2_bx_all,r2_by_all,r2_bz_all,r2_magamp_all,r2_all,'r ($R_{M}$)','$r^2$ Score',r_range)
     
+def angular_difference_distro():
+    fs=25
+    lw=6
+    def hist_creation_diff(ar,rang,titl,xtitl,c,save=False):
+        
+        fig,ax=plt.subplots(1)
+        
+        counts,bins=np.histogram(ar,bins=36,range=rang)
+        
+        ax.hist(bins[:-1],bins,weights=counts/np.size(ar),histtype='step',linewidth=lw,color=c)
+        
+        #ax.legend()
+        
+        ax.set_xticks(np.arange(rang[0],rang[1]+1,round((rang[1]-rang[0])/9)))
+        
+        ax.set_title(titl,fontsize=fs)
+        
+        ax.set_xlabel(xtitl,fontsize=fs)
+        
+        ax.set_ylabel('Normalized Frequency',fontsize=fs)
+        
+        ax.tick_params(axis='y',labelsize=fs-4)
+        ax.tick_params(axis='x',labelsize=fs-4)
+        
+
+        ax.xaxis.set_minor_locator(AutoMinorLocator())  # Set minor ticks for the x-axis
+        ax.yaxis.set_minor_locator(AutoMinorLocator())
+            
+        ax.tick_params(axis='both', which='major', length=8)
+        ax.tick_params(axis='both', which='minor', length=4)
+        
+        fname='ensemble_'+titl
+        
+        if save==True:
+        
+            plt.savefig('/Users/bowersch/Desktop/DIAS/Work/Papers/ANN_modeling/Figures/Ensemble_Model/'+fname+'.png',dpi=600)
+   
+    filename_test='/Users/bowersch/df_attempt_TEST_ensemble_100_models_30deg.pkl'
+    
+    df=pd.read_pickle(filename_test)
+    
+    diffx=np.abs(df.bswx-df.bswx_pred)/df.bswx*100.
+ 
+    diffy=np.abs(df.bswy-df.bswy_pred)/df.bswy*100.
+ 
+    diffz=np.abs(df.bswz-df.bswz_pred)/df.bswz*100.
+    
+    diff=np.abs(df.magsw-df.magsw_pred)/df.magsw*100
+    
+    
+    import numpy as np
+    ca_sw=np.array([np.arctan2(df.bswy.iloc[i],df.bswz.iloc[i])*180/np.pi for i in range(len(df))])
+    ca_ms=np.array([np.arctan2(df.magy.iloc[i],df.magz.iloc[i])*180/np.pi for i in range(len(df))])
+    
+    cone_sw=np.array([np.arccos(df.bswx.iloc[i]/df.magsw.iloc[i])*180/np.pi for i in range(len(df))])
+    cone_ms=np.array([np.arccos(df.magx.iloc[i]/df.magamp.iloc[i])*180/np.pi for i in range(len(df))])
+    
+    ca_pred=np.array([np.arctan2(df.bswy_pred.iloc[i],df.bswz_pred.iloc[i])*180/np.pi for i in range(len(df))])
+    
+    cone_pred=np.array([np.arccos(df.bswx_pred.iloc[i]/df.magsw_pred.iloc[i])*180/np.pi for i in range(len(df))])
+    
+    df[['ca_sw','ca_ms','cone_sw','cone_ms','ca_pred','cone_pred']]=np.transpose(np.vstack((ca_sw,ca_ms,cone_sw,cone_ms,ca_pred,cone_pred)))
+    
+    angular_ca_diff=np.abs(ca_sw-ca_pred)
+    angular_cone_diff=np.abs(cone_sw-cone_pred)
+    
+    for i in range(len(angular_ca_diff)):
+        if angular_ca_diff[i] >180:
+            angular_ca_diff[i]=np.abs(angular_ca_diff[i]-360)
+            
+        #if angular_cone_diff[i]>90:
+            #angular_cone_diff[i]=np.abs(angular_cone_diff[i]-90)
+        
+    hist_creation_diff(angular_ca_diff,[0,180],'$|\u03C8_{FNN}-\u03C8_{IMF}|$','Clock Angle Difference (deg)','mediumpurple')
+    
+    hist_creation_diff(angular_cone_diff,[0,180],'$|\u03C6_{FNN}-\u03C6_{IMF}|$','Cone Angle Difference (deg)','orange')
+        
+        
+#     #dayside=np.where(np.abs(df.r) < 2)[0]
+    print('Percent of |B| diff that falls below 50 % :')
+    print(np.size(np.where(diff < 50))/np.size(diff))
+       
+    print('Percent of Clock Angle that falls within 30 degrees :')
+    print(np.size(np.where(angular_ca_diff <30))/np.size(angular_ca_diff))
+       
+    print('Percent of Cone Angle that falls within 30 degrees :')
+    print(np.size(np.where(angular_cone_diff <30))/np.size(angular_cone_diff))
+
     
 
 def plot_region_time_series_plots(trange):
@@ -3558,7 +3670,7 @@ def shap_analysis():
     '''Generate the SHAP analysis plot from the train dataset formed from creating 
     a version of the model with fewer than 50 models
     
-    Generates Figure 7 of the manuscript
+    Generates Figure 7 of the manuscriptsa
     '''
     import shap
     
