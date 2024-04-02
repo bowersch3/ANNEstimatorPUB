@@ -1,10 +1,9 @@
-# ANN_Estimator_PUB
-The python file used to build the FNN and make the figures from the manuscript
-# Project Name
+# ANN_Estimator_PUB **(Under Peer Review)**
+The python file used to build the feedforward neural network and generate the figures from the manuscript.
 
-Brief description of the project.
+This repository is released for the peer review process and has NOT been accepted.
 
-## Table of Contents
+## Contents
 - [About](#about)
 - [Installation](#installation)
 - [Usage](#usage)
@@ -12,7 +11,7 @@ Brief description of the project.
 - [License](#license)
 
 ## About
-Explain what your project is about, its purpose, and any relevant information.
+The 
 
 ## Installation
 Provide instructions on how to install your project, including any dependencies that need to be installed.
