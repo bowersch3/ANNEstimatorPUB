@@ -5,7 +5,7 @@ This repository is released for the peer review process and has NOT been accepte
 
 ## Contents
 - [About](#about)
-- [Pre-processing](#pre-processing)
+- [MESSENGER Data Format](#MESSENGER Data Format)
 - [Usage](#usage)
 - [Contributing](#contributing)
 - [License](#license)
