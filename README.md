@@ -46,7 +46,7 @@ Example:
 
 
 ## Usage
-First, at the beginning of the PUB_ANN_Work.py, specify a folder where the data and results may be saved under the variale:
+First, at the beginning of the PUB_ANN_Work.py, specify a folder where the data and results may be saved under the variable:
 ```python
 save_path = 'YOUR_PATH_TO_FOLDER'
 ```
