@@ -7,11 +7,11 @@ This repository is released for the peer review process and has NOT been accepte
 - [About](#about)
 - [Data](#data)
 - [Usage](#usage)
-- [Contributing](#contributing)
+- [Model](#model)
 - [License](#license)
 
 ## About
-The Pub_ANN_Work.py contains functions that was used to build and train a FNN to estimate the upstream interplanetary magnetic field (IMF) conditions from magnetosheath measurements obtained by the MESSENGER spacecraft. This model is useful for decreasing the temporal separation between an estimate of the IMF and a magnetospheric phenomenon measured by MESSENGER by inferring IMF conditions based on magnetosheath measurements.
+The Pub_ANN_Work.py contains functions that were used to build and train a FNN to estimate the upstream interplanetary magnetic field (IMF) conditions from magnetosheath measurements obtained by the MESSENGER spacecraft. This model is useful for decreasing the temporal separation between an estimate of the IMF and a magnetospheric phenomenon measured by MESSENGER by inferring IMF conditions based on magnetosheath measurements.
 
 The model makes IMF predictions for all magnetosheath measurements taken by MESSENGER from March 24, 2011 to April, 29, 2015. The time ranges for the magnetosheath are determined by a list of crossings compiled by Weijie Sun and available via a Zenodo repository (https://zenodo.org/record/8298647).
 
@@ -74,8 +74,11 @@ file_bs_out = 'PATH_TO_BOW_SHOCK_OUT'
 - Predictions for the IMF for MESSENGER magnetosheath observations are made by running all $n$ model predictions on all magnetosheath measurements, taking the average and standard deviation of all model predictions for each magnetosheath measurement.
 - These predictions are then saved to a .pkl file.
 
-## Contributing
-Include guidelines for contributing to your project, such as how to report bugs or suggest improvements. 
+## Model
+
+The model uses a feed-forward neural network. The inputs to the model are
+
+- Magnetosheath $B_X$, $B_Y$ and $B_Z$ in nT where $\hat{X}, \hat{Y}, \hat{Z}$ refer to the aberrated Mercury Solar Magnetospheric MSM'coordinate system
 
 ## License
 Specify the license under which your project is distributed. For example, you can use the MIT License, Apache License 2.0, etc. Provide a link to the license file if applicable.
