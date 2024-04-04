@@ -62,8 +62,17 @@ file_bs_out = 'PATH_TO_BOW_SHOCK_OUT'
 - The dataset of all magnetosheath measurements is then downsampled to 40 second resolution
 - We generate the dataframes that become magnetosheath inputs and outputs by selecting for bow shock crossing intervals that meet the conditions outlined by the publication.
 - This dataframe of features (magnetosheath properties) and targets (IMF properties) is then used to train a total of $n$ feed-forward neural networks, where $n$ is the number of models used to build an ensemble model trained on slighlty different training data.
+- The model is trained on 8 features, and outputs 4 targets
   - Split the data into training, test, and validation datasets.
+  - Normalize the inputs and outputs using MinMaxScaler from sklearn.preprocessing
   - Randomly pull data from the training set using bootstrap aggregation
+  - The model:
+    - Input layer
+    - 3 hidden layers with 24 neurons per layer and a hyperbolic tangent activation function and a BatchNormalization layer in between each hidden layer
+    - Output layer
+  - The model is then saved and a new model is built and trained with slightly different training data from the next bootstrap aggregation pull of the training data
+- Predictions for the IMF for MESSENGER magnetosheath observations are made by running all $n$ model predictions on all magnetosheath measurements, taking the average and standard deviation of all model predictions for each magnetosheath measurement.
+- These predictions are then saved to a .pkl file.
 
 ## Contributing
 Include guidelines for contributing to your project, such as how to report bugs or suggest improvements. 
