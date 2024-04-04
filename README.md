@@ -76,9 +76,10 @@ file_bs_out = 'PATH_TO_BOW_SHOCK_OUT'
 
 ## Model
 
-The model uses a feed-forward neural network. The inputs to the model are
+The model uses a feed-forward neural network. The coordinate system for the model is the aberrated Mercury Solar Magnetospheric (MSM') coordinate system. This coordinate system is centered on the magnetic dipole of Mercury, where $\hat{X} points in the opposite direction of the solar wind flow, \hat{Y} is opposite to the orbital motion of Mercury, and \hat{Z}$ points towards geographic north. The inputs to the model are measurements taken within the magnetosheath. They are:
 
-- Magnetosheath $B_X$, $B_Y$ and $B_Z$ in nT where $\hat{X}, \hat{Y}, \hat{Z}$ refer to the aberrated Mercury Solar Magnetospheric MSM'coordinate system
+- Magnetosheath $B_X$, $B_Y$ and $B_Z$ [nT]
+- Amplitude of the magnetosheath magnetic field $|B|$ [nT]
 
 ## License
 Specify the license under which your project is distributed. For example, you can use the MIT License, Apache License 2.0, etc. Provide a link to the license file if applicable.
