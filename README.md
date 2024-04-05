@@ -12,7 +12,6 @@ This repository is released for the peer review process and has NOT been accepte
 - [Model](#model)
 - [Assessment](#assessment)
 - [Limitations](#limitations)
-- [License](#license)
 
 ## About
 The Pub_ANN_Work.py contains functions that were used to build and train a FNN to estimate the upstream interplanetary magnetic field (IMF) conditions from magnetosheath measurements obtained by the MESSENGER spacecraft. This model is useful for decreasing the temporal separation between an estimate of the IMF and a magnetospheric phenomenon measured by MESSENGER by inferring IMF conditions based on magnetosheath measurements.
@@ -167,5 +166,3 @@ The outputs of the model are:
 - When any of magnetosheath magnetic field components are low, the model tends to perform worse.
 - The model only makes predictions at a 40 s cadence and should not be trained on or applied to a higher resolution measurements. This constraint is due to the high frequency variability of magnetosheath magnetic field that are caused by local processes rather than upstream IMF rotations.
 - This uncertainty is derived from the standard deviation of the separate IMF predictions made from the 100 models trained on slightly different training sets. When $\sigma$ is high, there is a large range of predictions for this parameter made by models trained on slightly different subsets of the training set. A sensitivity to training set selection in model prediction occurs in within regions of feature space infrequently encountered in the training set. Therefore this uncertainty calculation is larger for outlier magnetosheath conditions and smaller for more nominal conditions.
-## License
-Specify the license under which your project is distributed. For example, you can use the MIT License, Apache License 2.0, etc. Provide a link to the license file if applicable.
