@@ -78,6 +78,64 @@ file_bs_out = 'PATH_TO_BOW_SHOCK_OUT'
 - Predictions for the IMF for MESSENGER magnetosheath observations are made by running all $n$ model predictions on all magnetosheath measurements, taking the average and standard deviation of all model predictions for each magnetosheath measurement.
 - These predictions are then saved to a .pkl file.
 
+
+
+### Example Usage
+```python
+# Specify where the MESSENGER data files are saved
+
+file_MESSENGER_data = '/Users/bowersch/Desktop/MESSENGER Data/mess-mag-calibrated - avg'
+
+# Specify where you'd like the outputs to be saved on your machine
+
+save_path = '/Users/bowersch/Desktop/Python_Code/PUB_ANN_Test/'
+
+# Specify the where the Sun2023 files are located
+
+file_mp_in = '/Users/bowersch/Desktop/MESSENGER Data/Weijie Crossings/MagPause_In_Time_Duration_ver04_public_version.txt'
+
+file_mp_out = '/Users/bowersch/Desktop/MESSENGER Data/Weijie Crossings/MagPause_Out_Time_Duration_ver04_public_version.txt'
+
+file_bs_in = '/Users/bowersch/Desktop/MESSENGER Data/Weijie Crossings/Bow_Shock_In_Time_Duration_ver04_public_version.txt'
+
+file_bs_out = '/Users/bowersch/Desktop/MESSENGER Data/Weijie Crossings/Bow_Shock_Out_Time_Duration_ver04_public_version.txt'
+
+# Code to build the model:
+```
+- Load all the data and assign region label
+- 
+```python
+
+create_full_data_pickle()
+
+```
+
+
+- Generate dataset used to train, test and validate the model
+
+```python
+
+generate_SW_MS_dataframe_variance()
+
+```
+
+
+- Create an ensemble model with 100 individual models, and run the model on the training set, test set, and all magnetosheath observations by MESSENGER
+
+```python
+
+create_and_train_ensemble_model_norm(100)
+
+```
+
+- Check the model performance using an $r^2$ regression
+
+```python
+
+r2_analysis()
+
+```
+
 ## Model
 
 The model uses a feed-forward neural network. The coordinate system for the model is the aberrated Mercury Solar Magnetospheric (MSM') coordinate system. This coordinate system is centered on the magnetic dipole of Mercury, where $\hat{X}$ points in the opposite direction of the solar wind flow, $\hat{Y}$ is opposite to the orbital motion of Mercury, and $\hat{Z}$ points towards geographic north. The inputs to the model are measurements taken within the magnetosheath. The inputs to the model are:
@@ -108,6 +166,6 @@ The outputs of the model are:
 - Because IMF $|B|$ is predicted independently of its components, the predicted IMF components will not add in quadrature to match the IMF $|B|$ prediction, care should be taken when comparing components of the IMF prediction to the IMF $|B|$ prediction.
 - When any of magnetosheath magnetic field components are low, the model tends to perform worse.
 - The model only makes predictions at a 40 s cadence and should not be trained on or applied to a higher resolution measurements. This constraint is due to the high frequency variability of magnetosheath magnetic field that are caused by local processes rather than upstream IMF rotations.
-- 
+- This uncertainty is derived from the standard deviation of the separate IMF predictions made from the 100 models trained on slightly different training sets. When $\sigma$ is high, there is a large range of predictions for this parameter made by models trained on slightly different subsets of the training set. A sensitivity to training set selection in model prediction occurs in within regions of feature space infrequently encountered in the training set. Therefore this uncertainty calculation is larger for outlier magnetosheath conditions and smaller for more nominal conditions.
 ## License
 Specify the license under which your project is distributed. For example, you can use the MIT License, Apache License 2.0, etc. Provide a link to the license file if applicable.
