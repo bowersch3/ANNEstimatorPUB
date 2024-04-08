@@ -1,7 +1,7 @@
 # ANN_Estimator_PUB **(Under Peer Review)**
 The python file used to build the feedforward neural network (FNN) and generate the figures from the manuscript.
 
-This code trains and tests an FNN to predict upstream IMF conditions based on magnetosheath observations obtained by MESSENGER. It it's current form, the model must only be applied to MESSENGER data, and is not directly applicable to other spacecraft.
+This code trains and tests an FNN to predict upstream IMF conditions based on magnetosheath observations obtained by MESSENGER. In its current form, the model must only be applied to MESSENGER data. The potential for application to BepiColombo data, including expansion of the training set, is explored in detail in Bowers et al. [submitted, 2024]
 
 This repository is released for the peer review process and has NOT been accepted.
 
