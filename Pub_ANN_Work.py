@@ -38,23 +38,25 @@ import os
 
 
 
-# Specify your save path for files
 
-#save_path = '/Users/bowersch/Desktop/Python_Code/MESSENGER_Lobe_Analysis/'
 
-save_path = '/Users/bowersch/Desktop/Python_Code/PUB_ANN_Test/'
-
-# Specify the where the Sun2023 files are located
-
-file_mp_in = '/Users/bowersch/Desktop/MESSENGER Data/Weijie Crossings/MagPause_In_Time_Duration_ver04_public_version.txt'
-file_mp_out = '/Users/bowersch/Desktop/MESSENGER Data/Weijie Crossings/MagPause_Out_Time_Duration_ver04_public_version.txt'
-file_bs_in = '/Users/bowersch/Desktop/MESSENGER Data/Weijie Crossings/Bow_Shock_In_Time_Duration_ver04_public_version.txt'
-file_bs_out = '/Users/bowersch/Desktop/MESSENGER Data/Weijie Crossings/Bow_Shock_Out_Time_Duration_ver04_public_version.txt'
 
 # Define where the MESSENGER data from the PDS is stored on your machine, used in
 # load_MESSENGER_into_tplot
 
-file_MESSENGER_data = '/Users/bowersch/Desktop/MESSENGER Data/mess-mag-calibrated - avg'
+file_MESSENGER_data = 'YOUR PATH to MESSENGER DATA'
+
+# Specify your save path for files
+
+save_path = 'PATH WHERE YOU WANT TO SAVE YOUR FILES'
+
+# Specify the where the Sun2023 files are located
+
+file_mp_in = 'FILE PATH FOR MagPause_IN_TIME_DURATOIN FOR Sun2023 LIST'
+file_mp_out = 'FILE PATH FOR MagPause_OUT_TIME_DURATOIN FOR Sun2023 LIST'
+file_bs_in = 'FILE PATH FOR Bow_Shock_IN_TIME_DURATOIN FOR Sun2023 LIST'
+file_bs_out = 'FILE PATH FOR Bow_Shock_OUT_TIME_DURATOIN FOR Sun2023 LIST'
+
 
 
 
@@ -188,6 +190,7 @@ def create_full_data_pickle():
         
         Loads each day of MESSENGER data with load_MESSENGER_into_tplot
         
+        creates full_data
         '''
         
     import pandas as pd
@@ -1239,7 +1242,7 @@ def generate_SW_MS_dataframe_variance(max_ang_diff):
     
     return ms
 
-def create_and_train_ensemble_model_norm(num_models,filename,save_file_tag,emp_pred=False):
+def create_and_train_ensemble_model_norm(num_models,emp_pred=False):
     from sklearn.ensemble import BaggingRegressor
     from sklearn.model_selection import train_test_split
     from sklearn.preprocessing import MinMaxScaler
@@ -1543,13 +1546,12 @@ def create_and_train_ensemble_model_norm(num_models,filename,save_file_tag,emp_p
     
     
     save_dir = 'saved_models'
-    breakpoint()
     # Create the directory if it doesn't exist
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
+    if not os.path.exists(save_path+save_dir):
+        os.makedirs(save_path+save_dir)
     
-    for i, model in enumerate(models):
-        model.save(save_path+save_dir+"f/model_{i}.h5")
+    for i in range(len(models)):
+        models[i].save(save_path+save_dir+"/model_"+str(i)+".h5")
     
     df_test=pd.DataFrame(data=X_test_all,columns=full_variables)
     
@@ -1621,7 +1623,9 @@ def create_and_train_ensemble_model_norm(num_models,filename,save_file_tag,emp_p
     ms=create_predictions(X_all_2,ms)
     
     pd.to_pickle(ms,save_path+'df_attempt_ALL_MS_ensemble_'+str(num_models)+'_models_norm_'+save_file_tag+'.pkl')
-    
+
+
+
 def feature_distro(save=False):
     '''Generate feature distribution plot (Figure 2 in the manuscript)'''
     
@@ -2311,7 +2315,7 @@ def create_all_meshes_ANN():
     
     Run this after the model is created and the dataset is created
     
-    Creates Figure 4 in the manusc
+    Creates Figure 4 in the manuscript
     
     '''
     
