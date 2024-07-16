@@ -46,9 +46,15 @@ import os
 
 file_MESSENGER_data = 'YOUR PATH to MESSENGER DATA'
 
+file_MESSENGER_data = '/Users/bowersch/Desktop/MESSENGER Data/'
+
 # Specify your save path for files
 
 save_path = 'PATH WHERE YOU WANT TO SAVE YOUR FILES'
+
+save_path = '/Users/bowersch/Desktop/Python_Code/PUB_ANN_Test/'
+
+#save_path = '/Users/bowersch/Desktop/Python_Code/PUB_ANN_Test_R2R/'
 
 # Specify the where the Sun2023 files are located
 
@@ -56,6 +62,13 @@ file_mp_in = 'FILE PATH FOR MagPause_IN_TIME_DURATOIN FOR Sun2023 LIST'
 file_mp_out = 'FILE PATH FOR MagPause_OUT_TIME_DURATOIN FOR Sun2023 LIST'
 file_bs_in = 'FILE PATH FOR Bow_Shock_IN_TIME_DURATOIN FOR Sun2023 LIST'
 file_bs_out = 'FILE PATH FOR Bow_Shock_OUT_TIME_DURATOIN FOR Sun2023 LIST'
+
+
+scf = '/Users/bowersch/Desktop/MESSENGER Data/Weijie Crossings/'
+file_mp_in=scf+'MagPause_In_Time_Duration__public_version_WeijieSun_20230829.txt'
+file_mp_out=scf+'MagPause_Out_Time_Duration_public_version_WeijieSun_20230829.txt'
+file_bs_in=scf+'Bow_Shock_In_Time_Duration__public_version_WeijieSun_20230829.txt'
+file_bs_out=scf+'Bow_Shock_Out_Time_Duration_public_version_WeijieSun_20230829.txt'
 
 
 
@@ -751,53 +764,53 @@ def generate_SW_MS_dataframe_variance(max_ang_diff):
     #Downsample data to new resolution and make new downsampled dataframe
     
     # Load in the dataset 
-    all_data=pd.read_pickle(save_path+'fd_prep_w_boundaries.pkl')
+    # all_data=pd.read_pickle(save_path+'fd_prep_w_boundaries.pkl')
     
-    # New resolution is 40 seconds
-    nr=40
+    # # New resolution is 40 seconds
+    # nr=40
     
-    #Downsample arrays in all_data to create new dataframe of eph and mag properties
+    # #Downsample arrays in all_data to create new dataframe of eph and mag properties
     
-    magx=downsample(nr,all_data.magx.to_numpy())
-    magy=downsample(nr,all_data.magy.to_numpy())
-    magz=downsample(nr,all_data.magz.to_numpy())
+    # magx=downsample(nr,all_data.magx.to_numpy())
+    # magy=downsample(nr,all_data.magy.to_numpy())
+    # magz=downsample(nr,all_data.magz.to_numpy())
     
-    magamp=downsample(nr,all_data.magamp.to_numpy())
+    # magamp=downsample(nr,all_data.magamp.to_numpy())
     
-    ephx=downsample(nr,all_data.ephx.to_numpy())
-    ephy=downsample(nr,all_data.ephy.to_numpy())
-    ephz=downsample(nr,all_data.ephz.to_numpy())
+    # ephx=downsample(nr,all_data.ephx.to_numpy())
+    # ephy=downsample(nr,all_data.ephy.to_numpy())
+    # ephz=downsample(nr,all_data.ephz.to_numpy())
     
-    type_num=downsample(nr,all_data.Type_num.to_numpy(),type_num=True)
+    # type_num=downsample(nr,all_data.Type_num.to_numpy(),type_num=True)
     
-    # Have to be manually compute the downsampled time array because of datetimes
+    # # Have to be manually compute the downsampled time array because of datetimes
 
-    new_resolution = nr  # Number of points to average over
+    # new_resolution = nr  # Number of points to average over
 
-    time=all_data.time.to_numpy()
+    # time=all_data.time.to_numpy()
     
-    time=np.array([pd.Timestamp(t) for t in time])
+    # time=np.array([pd.Timestamp(t) for t in time])
     
     
-    # Calculate the new length of the arrays after averaging
-    new_length = len(all_data.time.to_numpy()) // new_resolution
+    # # Calculate the new length of the arrays after averaging
+    # new_length = len(all_data.time.to_numpy()) // new_resolution
     
-    # Reshape the arrays to prepare for averaging
-    t_reshaped = time[:new_length * new_resolution].reshape(new_length, new_resolution)
+    # # Reshape the arrays to prepare for averaging
+    # t_reshaped = time[:new_length * new_resolution].reshape(new_length, new_resolution)
     
-    def tstamp(x):
-        return x.timestamp()
-    t_utc=np.vectorize(tstamp)(t_reshaped)
+    # def tstamp(x):
+    #     return x.timestamp()
+    # t_utc=np.vectorize(tstamp)(t_reshaped)
     
-    # Calculate the average values
-    t_averaged_utc = np.mean(t_utc, axis=1)
+    # # Calculate the average values
+    # t_averaged_utc = np.mean(t_utc, axis=1)
     
-    t_averaged=np.array([convert_to_datetime(convert_to_date_2_utc(t)) for t in t_averaged_utc])
+    # t_averaged=np.array([convert_to_datetime(convert_to_date_2_utc(t)) for t in t_averaged_utc])
     
-    all_data_40=pd.DataFrame(data={'magx':magx,'magy':magy,'magz':magz,'magamp':magamp,'time':t_averaged,'ephx':ephx,'ephy':ephy,'ephz':ephz,'Type_num':type_num[:,0]})
+    # all_data_40=pd.DataFrame(data={'magx':magx,'magy':magy,'magz':magz,'magamp':magamp,'time':t_averaged,'ephx':ephx,'ephy':ephy,'ephz':ephz,'Type_num':type_num[:,0]})
     
-    # Save so you only have to run the downsample once
-    pd.to_pickle(all_data_40,save_path+'full_data_w_boundaries_40.pkl')
+    # # Save so you only have to run the downsample once
+    # pd.to_pickle(all_data_40,save_path+'full_data_w_boundaries_40.pkl')
 # =============================================================================
     
     all_data_40=pd.read_pickle(save_path+'full_data_w_boundaries_40.pkl')
@@ -893,7 +906,7 @@ def generate_SW_MS_dataframe_variance(max_ang_diff):
         # Set time before/after BS that we average over to estimate sw magnetic field
         
         # For the manuscript, only use the most direct upstream IMF measurement (swt=1)
-        swt=1
+        swt=5
         
         # Make sure there is data within the interval loaded
         if np.size(gd)>0:
@@ -1624,7 +1637,325 @@ def create_and_train_ensemble_model_norm(num_models,emp_pred=False):
     
     pd.to_pickle(ms,save_path+'df_attempt_ALL_MS_ensemble_'+str(num_models)+'_models_norm_'+save_file_tag+'.pkl')
 
+def create_and_train_random_forest(num_models,n_est):
+    
+    import pandas as pd
+    from sklearn.ensemble import RandomForestRegressor
+    from sklearn.metrics import mean_squared_error
+    from sklearn.ensemble import BaggingRegressor
+    from sklearn.model_selection import train_test_split
+    from sklearn.preprocessing import MinMaxScaler
+    from sklearn.metrics import mean_squared_error
+    import numpy as np
+    import pandas as pd
+    import tensorflow as tf
+    from tensorflow.keras.models import Sequential
+    from tensorflow.keras.layers import Input, BatchNormalization, Dense
+    import matplotlib.pyplot as plt
+    
+    # filename for manuscript = save_path+'dataset_30_diff.pkl'
+    
+    filename=save_path+'dataset_30_diff.pkl'
+    
+    save_file_tag = '30deg'
+    
+    #Load in dataframe
+    df = pd.read_pickle(filename)
+    df = df.drop(columns=['traj'])
+        
+    quartile_limit=.999
+        
+    quartile_threshold = df['magamp'].quantile(quartile_limit)
+        
+    filtered_df = df[df['magamp'] <= quartile_threshold]
+        
+    df=filtered_df
+        
+    quartile_threshold = df['magsw'].quantile(quartile_limit)
+        
+    filtered_df = df[df['magsw'] <= quartile_threshold]
+        
+    df=filtered_df
+    
+    # Load your data from a DataFrame (assuming df is already loaded)
+    
+    # Calculate heliocentric distance, and add it to the dataframe
+    distance=np.array([get_mercury_distance_to_sun(t) for t in df.time])
+    
+    df['distance']=distance     
+        
+        
+    full_variables=['magx', 'magy', 'magz', 'magamp', 'x', 'r', 'theta','distance','ephx','ephy','ephz','r_mp','r_bs','time','tsw','alpha']
+        
+    
+    # Define the variables that are the output/target of the model
+    
+    target_variables = ['bswx','bswy','bswz','magsw']
+    
+    # Define the variables that are the inputs to the model
+    
+    input_variables = ['magx', 'magy', 'magz', 'magamp', 'x', 'r', 'theta','distance']
+        
+    # Pull targets (y) and inputs (X) from df
+    
+    X = np.array(df[full_variables].values)
+    y = np.array(df[target_variables].values,dtype=float)
+    
+    
+    # This next step ensures that the data are split into training/test sets along
+    # individual bowshock crossings, making all ms and IMF data from a bs crossing
+    # to be put into either the training or the test set.
+    
+    # Manually shift data
+    shift=df.shift(1)-df
+    
+    # Find points where the IMF target changes from one time step to the next
+    transitions=np.where(shift.bswx != 0.0)[0]
+    
+    transitions=np.insert(transitions,len(transitions),len(shift))
+    
+    #Create array of bowshock segments to be separated
+    bs_segments = [(transitions[i], transitions[i + 1]) for i in range(len(transitions) - 1)]
+    
+    int_array=np.arange(len(transitions)-1)
+    
+    
+    # Split this list of indicies into training and test sets
+    train_array_val, test_array = train_test_split(int_array, test_size=0.2, random_state=42)
+    
+    train_array, val_array= train_test_split(train_array_val,test_size=0.2, random_state=42)
+    
+    X_train=X[bs_segments[train_array[0]][0]:bs_segments[train_array[0]][1]]
+    
+    for j in range(len(train_array)):
+        
+        if j==0:
+            X_train=X[bs_segments[train_array[0]][0]:bs_segments[train_array[0]][1]]
+            y_train=y[bs_segments[train_array[0]][0]:bs_segments[train_array[0]][1]]
+            
+        else:
+            X_train=np.vstack((X_train,X[bs_segments[train_array[j]][0]:bs_segments[train_array[j]][1]]))
+            y_train=np.vstack((y_train,y[bs_segments[train_array[j]][0]:bs_segments[train_array[j]][1]]))
+            
+    for j in range(len(test_array)):
+        
+        if j==0:
+            X_test=X[bs_segments[test_array[0]][0]:bs_segments[test_array[0]][1]]
+            y_test=y[bs_segments[test_array[0]][0]:bs_segments[test_array[0]][1]]
+            
+        else:
+            X_test=np.vstack((X_test,X[bs_segments[test_array[j]][0]:bs_segments[test_array[j]][1]]))
+            y_test=np.vstack((y_test,y[bs_segments[test_array[j]][0]:bs_segments[test_array[j]][1]]))
+    for j in range(len(val_array)):
+        
+        if j==0:
+            X_val=X[bs_segments[val_array[0]][0]:bs_segments[val_array[0]][1]]
+            y_val=y[bs_segments[val_array[0]][0]:bs_segments[val_array[0]][1]]
+            
+        else:
+            X_val=np.vstack((X_val,X[bs_segments[val_array[j]][0]:bs_segments[val_array[j]][1]]))
+            y_val=np.vstack((y_val,y[bs_segments[val_array[j]][0]:bs_segments[val_array[j]][1]]))
+    
+    # Create new variables that only have relavant magnetosheath quantities
+        
+    X_train_all=X_train
+    X_test_all=X_test
+    X_val_all=X_val
+    
+    X_all=X
+    
+    X_train_run=X_train[:,0:8]
+    X_test_run=X_test[:,0:8]
+    X_val_run=X_val[:,0:8]
+    
+    X_run=np.array(X[:,0:8])
+    
+    # Create an empty list to store individual models
+    models = []
+    
+    np.random.seed(30)
+    # Create a list of seeds to make the same random choice of training set each time
+    
+    seed_array=np.arange(100)
+    
+    seeds=np.random.choice(seed_array,size=len(seed_array),replace=False)
+    
+    for i in range(num_models):
+        print(i)
+        # Create a new model for each bootstrap iteration
+        from tensorflow.keras.models import Sequential, Model
+        from tensorflow.keras.layers import Input, Dense, BatchNormalization, Lambda
+        from tensorflow.keras.optimizers import Adam
+        from sklearn.preprocessing import MinMaxScaler
+        import numpy as np
+        
+        # Assuming X_train_run and X_val_run are your input features
+        # Assuming y_train and y_val are your target labels
+        
+        # Normalize your input features, setting them from 0 to 1
+        scaler_X = MinMaxScaler()
+        X_train_normalized = scaler_X.fit_transform(X_train_run)
+        X_val_normalized = scaler_X.transform(X_val_run)
+        
+        # Normalize your targets, setting them from 0 to 1
+        scaler_y = MinMaxScaler()
+        y_train_normalized = scaler_y.fit_transform(y_train)
+        y_val_normalized = scaler_y.transform(y_val)
+        
+        # Begin bagging regression
+        
+        # First, define an array of indicies to be randomized
+        index_array=np.arange(len(X_train_normalized))
+        
+        # Randomize the indicies
+        np.random.seed(seeds[i])
+        sample_array=np.random.choice(index_array,size=len(index_array), replace=True
+                                      )
+        
+        # Only include the randomized portion of the training set
+        X_train_rs=X_train_normalized[sample_array,:]
+        
+        y_train_rs=y_train_normalized[sample_array,:]
+        
+        
+        if num_models < 50:
+            
+            # Only use the bagging regression for high number of model runs
+            # If using a small number of runs, then just use the full training set
+            
+            X_train_rs=X_train_normalized
+            
+            y_train_rs=y_train_normalized
+            
+        
+        # Build the model with normalization and denormalization layers
+        model = RandomForestRegressor(n_estimators=n_est, random_state=42)
+        
+        # Compile the model
+        #model.compile(optimizer='adam', loss='mean_squared_error')
+        
+        # Train the model with normalized data
+        history = model.fit(X_train_rs, y_train_rs)
+        
+        # Optionally, if you want to use the original y_train and y_val for evaluation:
+        
+        models.append(model)
+        
+        
+        
+        
+        #breakpoint()
+        
 
+    def create_predictions(X_array,df_model_run):
+        
+        predictions = np.zeros_like(X_array[:,0:4], dtype=np.float32)
+        
+        for i, model in enumerate(models):
+            print(i)
+            predictions += scaler_y.inverse_transform(model.predict(X_array))
+        
+        model_predictions=np.zeros((num_models, len(X_array), 4))
+        for i, model in enumerate(models):
+            # Predictions from the model
+            print(i)
+            prediction = model.predict(X_array)
+            
+            prediction = scaler_y.inverse_transform(prediction)
+            
+            model_predictions[i, :, :] = prediction
+            
+        ensemble_predictions = predictions / num_models
+        uncertainty = np.std(model_predictions, axis=0)
+        
+        df_model_run[['bswx_pred','bswy_pred','bswz_pred','magsw_pred']]=ensemble_predictions
+        
+        df_model_run[['bswx_err','bswy_err','bswz_err','magsw_err']]=uncertainty
+        
+        np.save('model_predictions.npy',model_predictions)
+        
+        return df_model_run
+    
+    
+    save_dir = 'saved_models'
+    # Create the directory if it doesn't exist
+    if not os.path.exists(save_path+save_dir):
+        os.makedirs(save_path+save_dir)
+    
+    #f#or i in range(len(models)):
+       # models[i].save(save_path+save_dir+"/rf_model_"+str(i)+".h5")
+    
+    df_test=pd.DataFrame(data=X_test_all,columns=full_variables)
+    
+    df_test[target_variables]=y_test
+    
+    X_test_normalized=scaler_X.transform(X_test_run)
+    
+    df_test=create_predictions(X_test_normalized,df_test)
+    
+    
+    
+    
+    df_train=pd.DataFrame(data=X_train_all,columns=full_variables)
+    
+    df_train[['bswx','bswy','bswz','magsw']]=y_train
+    #X_test_normalized=scaler.transform(X_test)
+    
+    X_train_normalized=scaler_X.transform(X_train_run)
+    
+    
+    df_train=create_predictions(X_train_normalized,df_train)
+    
+    
+    
+    df_full=pd.DataFrame(data=X_all,columns=full_variables)
+    
+    X_run_normalized=scaler_X.transform(X_run)
+
+    df_full=create_predictions(X_run_normalized,df_full)
+
+        
+    df_full[['bswx','bswy','bswz','magsw','tsw','ephx','ephy','ephz']]=df[['bswx','bswy','bswz','magsw','tsw','ephx','ephy','ephz']]
+    
+    pd.to_pickle(df_test,save_path+'df_attempt_TEST_ensemble_'+str(n_est)+'_'+str(num_models)+'rf_models_'+save_file_tag+'.pkl')
+    
+    pd.to_pickle(df_full,save_path+'df_attempt_FULL_ensemble_'+str(n_est)+'_'+str(num_models)+'rf_models_norm_'+save_file_tag+'.pkl')
+    
+    pd.to_pickle(df_train,save_path+'df_attempt_TRAIN_ensemble_'+str(n_est)+'_'+str(num_models)+'rf_models_norm_'+save_file_tag+'.pkl')
+    
+    
+    all_data_40=pd.read_pickle(save_path+'full_data_w_boundaries_40.pkl')
+    
+
+    
+    ms=all_data_40[all_data_40.Type_num==2]
+    
+    distance_ms=np.array([get_mercury_distance_to_sun(t) for t in ms.time])
+    
+    ms['distance']=distance_ms
+    
+    eph=ms[['ephx','ephy','ephz']].to_numpy()
+    
+    x=eph[:,0]
+    
+    r=np.sqrt(eph[:,1]**2+eph[:,2]**2)
+    
+    theta=np.arctan2(eph[:,1],eph[:,2])*180/np.pi
+    
+    ms['x']=x
+    ms['r']=r
+    ms['theta']=theta
+    
+    
+    
+    X_all_2 = np.array(ms[input_variables],dtype=float)
+    
+    X_all_2 = scaler_X.transform(X_all_2)
+    
+    ms=create_predictions(X_all_2,ms)
+    
+    pd.to_pickle(ms,save_path+'df_attempt_ALL_MS_ensemble_'+str(n_est)+'_'+str(num_models)+'rf_models_norm_'+save_file_tag+'.pkl')
+    
 
 def feature_distro(save=False):
     '''Generate feature distribution plot (Figure 2 in the manuscript)'''
@@ -1677,13 +2008,13 @@ def feature_distro(save=False):
         
         counts,bins=np.histogram(sw_ar,bins=30,range=rang)
         
-        ax.hist(bins[:-1],bins,weights=counts/np.size(sw_ar),color='gold',histtype='step',linewidth=lw,label='IMF')
+        ax.hist(bins[:-1],bins,weights=counts/np.size(sw_ar),color='gold',histtype='step',linewidth=lw,label='IMF'' ('+str(np.size(sw_ar))+' points)')
         
         #ax.hist(sw_ar,bins=30,range=rang,density=True,color='gold',histtype='step',linewidth=3,label='IMF_Measured')
         
         counts,bins=np.histogram(ms_ar,bins=30,range=rang)
         
-        ax.hist(bins[:-1],bins,weights=counts/np.size(ms_ar),color='royalblue',histtype='step',linewidth=lw,label='Magnetosheath')
+        ax.hist(bins[:-1],bins,weights=counts/np.size(ms_ar),color='royalblue',histtype='step',linewidth=lw,label='Magnetosheath'' ('+str(np.size(ms_ar))+' points)')
 
         ax.tick_params(axis='y',labelsize=fs-4)
         ax.tick_params(axis='x',labelsize=fs-4)
@@ -1717,13 +2048,13 @@ def feature_distro(save=False):
         
         counts,bins=np.histogram(ar1,bins=30,range=rang)
         
-        ax.hist(bins[:-1],bins,weights=counts/np.size(ar1),color='indianred',histtype='step',linewidth=lw,label=label1)
+        ax.hist(bins[:-1],bins,weights=counts/np.size(ar1),color='indianred',histtype='step',linewidth=lw,label=label1 +' ('+str(np.size(ar1))+' points)')
         
         #ax.hist(sw_ar,bins=30,range=rang,density=True,color='gold',histtype='step',linewidth=3,label='IMF_Measured')
         
         counts,bins=np.histogram(ar2,bins=30,range=rang)
         
-        ax.hist(bins[:-1],bins,weights=counts/np.size(ar2),color='mediumturquoise',histtype='step',linewidth=lw,label=label2)
+        ax.hist(bins[:-1],bins,weights=counts/np.size(ar2),color='mediumturquoise',histtype='step',linewidth=lw,label=label2+' ('+str(np.size(ar2))+' points)')
 
     
         #ax.hist(ms_ar,bins=30,range=rang,density=True,color='royalblue',histtype='step',linewidth=3,label='MS_Measured')
@@ -1754,10 +2085,10 @@ def feature_distro(save=False):
         
 
     
-    hist_creation_2(ca_sw,ca_ms,[-180,180],'Clock Angle Distribution','Clock Angle (deg)')
+    hist_creation_2(ca_sw,ca_ms,[-180,180],'Clock Angle (\u03C8) Distribution','Clock Angle  (\u03C8, deg)')
     
         
-    hist_creation_2(cone_sw,cone_ms,[0,180],'Cone Angle Distribution','Cone Angle (deg)')
+    hist_creation_2(cone_sw,cone_ms,[0,180],'Cone Angle (\u03C6) Distribution','Cone Angle (\u03C6, deg)')
     hist_creation_2(magsw,ms.magamp,[0,120],'|B| Distribution','|B| (nT)')
     
     
@@ -1787,15 +2118,67 @@ def feature_distro(save=False):
             
     feature_hist_creation(df_day.magamp,df_night.magamp,[0,120],'|B| with r','|B| (nT)','r>2.5 $R_{M}$','r<2.5 $R_{M}$')
 
-    feature_hist_creation(df_lt.cone_ms,df_st.cone_ms,[0,180],'Cone Angle with $\Theta$','Cone Angle (deg)','|$\Theta$| > 90$^\circ$','|$\Theta$| < 90$^\circ$')
+    feature_hist_creation(df_lt.cone_ms,df_st.cone_ms,[0,180],'Cone Angle (\u03C6) with $\Theta$','Cone Angle (deg)','|$\Theta$| > 90$^\circ$','|$\Theta$| < 90$^\circ$')
 
-    feature_hist_creation(df_px.ca_ms,df_nx.ca_ms,[-180,180],"Clock Angle with $X_{MSM'}$",'Clock Angle (deg)',"$X_{MSM'}$>0","$X_{MSM'}$<0")
+    feature_hist_creation(df_px.ca_ms,df_nx.ca_ms,[-180,180],"Clock Angle (\u03C8) with $X_{MSM'}$",'Clock Angle (deg)',"$X_{MSM'}$>0","$X_{MSM'}$<0")
 
      
     feature_hist_creation(df_aph.magamp,df_per.magamp,[0,120],'|B| with Heliocentric Distance','|B| (nT)','Aphelion ($r_{hc}$ > .45 AU)','Perihelion ($r_{hc}$ <.32 AU)')
  
+def mag_sum_analysis():
     
-def r2_analysis():
+    df=pd.read_pickle(save_path+'df_attempt_ALL_MS_ensemble_100rf_models_norm_30deg.pkl')
+    mag_sum = np.sqrt(df.bswx_pred**2+df.bswy_pred**2+df.bswz_pred**2)
+    
+    diff = mag_sum-df.magsw_pred
+    
+    fig,ax=plt.subplots(1)
+    
+    ax.hist(diff,range=(-20,20),bins=100)
+    
+    df = pd.read_pickle(save_path+'df_attempt_TEST_ensemble_100rf_models_30deg.pkl')
+    
+    fig,ax=plt.subplots(1)
+    
+    diff = df.bswx_pred-df.bswx
+    
+    diff_x = np.abs(df.bswx_pred)-np.abs(df.bswx)
+    ax.hist(diff,range=(-20,20),bins=100)
+    ax.hist(diff_x,range=(-20,20),bins=100,alpha=.5)
+    
+    print('BX '+str(np.mean(diff)))
+    print('|B_X|'+str(np.mean(diff_x)))
+    
+    fig,ax=plt.subplots(1)
+    
+    diff = df.bswy_pred-df.bswy
+    ax.hist(diff,range=(-20,20),bins=100)
+    
+    print('BY '+str(np.mean(diff)))
+    
+    fig,ax=plt.subplots(1)
+    
+    diff = df.bswz_pred-df.bswz
+    ax.hist(diff,range=(-20,20),bins=100)
+    
+    print('BZ '+str(np.mean(diff)))
+    
+    fig,ax=plt.subplots(1)
+    
+    diff = df.magsw_pred-df.magsw
+    ax.hist(diff,range=(-20,20),bins=100)
+    
+    print('|B| '+str(np.mean(diff)))
+    
+    fig,ax=plt.subplots(1)
+    
+    diff = mag_sum-df.magsw
+    ax.hist(diff,range=(-40,40),bins=100)
+    
+    print('MAGSUM '+str(np.mean(diff)))
+    
+  
+def r2_analysis(tree=False):
     ''' Generate the r2 analysis plots for each output, assessing model performance
     on the test set
     
@@ -1805,22 +2188,29 @@ def r2_analysis():
     
     df=pd.read_pickle(save_path+'df_attempt_TEST_ensemble_100_models_30deg.pkl')
     
+    if tree==True:
+        df=pd.read_pickle(save_path+'df_attempt_TEST_ensemble_300_2rf_models_30deg.pkl')
+    #df = pd.read_pickle('/Users/bowersch/Desktop/Python_Code/PUB_ANN_Test/df_attempt_TEST_ensemble_2_models_30deg.pkl')
+    
     
     bswx=np.array([float(i) for i in df.bswx])
     bswx_pred=np.array([float(i) for i in df.bswx_pred])
-    bswx_emp=np.array([float(i) for i in df.bx_emp_pred])
+   
     
     bswy=np.array([float(i) for i in df.bswy])
     bswy_pred=np.array([float(i) for i in df.bswy_pred])
-    bswy_emp=np.array([float(i) for i in df.by_emp_pred])
+    
     
     bswz=np.array([float(i) for i in df.bswz])
     bswz_pred=np.array([float(i) for i in df.bswz_pred])
-    bswz_emp=np.array([float(i) for i in df.bz_emp_pred])
+    
     
     magsw=np.array([float(i) for i in df.magsw])
     magsw_pred=np.array([float(i) for i in df.magsw_pred])
-    magsw_emp=np.sqrt(bswx_emp**2+bswy_emp**2+bswz_emp**2)
+    
+    #mag_sum = np.sqrt(df.bswx_pred**2+df.bswy_pred**2+df.bswz_pred**2)
+    
+    #df.magsw_pred = mag_sum
     
     r2_bx=r2_score(df.bswx,df.bswx_pred)
     
@@ -1838,6 +2228,85 @@ def r2_analysis():
     print(f'R2 |B| : {r2_magamp:.4f}')
     
     print(f'R2 mean : {rmean:.4f}')
+    
+    mag_sum = np.sqrt(df.bswx_pred**2+df.bswy_pred**2+df.bswz_pred**2)
+    r2_magamp_sum=r2_score(df.magsw,mag_sum)
+    
+    print(f'R2 |B_sum| : {r2_magamp_sum:.4f}')
+    
+    
+    from sklearn.metrics import mean_absolute_error, mean_squared_error
+
+    # Assuming df is your DataFrame with two columns 'column1' and 'column2'
+    # Calculate mean absolute error (MAE)
+    mae_bx = mean_absolute_error(df.bswx, df.bswx_pred)
+    mae_by = mean_absolute_error(df.bswy, df.bswy_pred)
+    mae_bz = mean_absolute_error(df.bswz, df.bswz_pred)
+    
+    mae_magamp = mean_absolute_error(df.magsw_pred,df.magsw)
+    
+    maemean = np.mean([mae_bx,mae_by,mae_bz,mae_magamp])
+    
+    print(f'MAE BX : {mae_bx:.4f}')
+    print(f'MAE BY : {mae_by:.4f}')
+    print(f'MAE BZ : {mae_bz:.4f}')
+    print(f'MAE |B| : {mae_magamp:.4f}')
+    
+    print(f'MAE mean : {maemean:.4f}')
+    
+    
+    
+    # Calculate root mean squared error (RMSE)
+    rmse_bx = np.sqrt(mean_squared_error(df.bswx, df.bswx_pred))
+    rmse_by = np.sqrt(mean_squared_error(df.bswy, df.bswy_pred))
+    rmse_bz = np.sqrt(mean_squared_error(df.bswz, df.bswz_pred))
+    
+    rmse_magamp = np.sqrt(mean_squared_error(df.magsw, df.magsw_pred))
+    
+    rmsemean = np.mean([rmse_bx,rmse_by,rmse_bz,rmse_magamp])
+    
+    print(f'RMSE BX : {rmse_bx:.4f}')
+    print(f'RMSE BY : {rmse_by:.4f}')
+    print(f'RMSE BZ : {rmse_bz:.4f}')
+    print(f'RMSE |B| : {rmse_magamp:.4f}')
+    
+    print(f'RMSE mean : {rmsemean:.4f}')
+    
+    
+    
+    std_bx = np.std(df.bswx - df.bswx_pred)
+    std_by = np.std(df.bswy - df.bswy_pred)
+    std_bz = np.std(df.bswz - df.bswz_pred)
+    
+    std_magamp = np.std(df.magsw - df.magsw_pred)
+    
+    stdmean = np.mean([std_bx,std_by,std_bz,std_magamp])
+    
+    print(f'STD BX : {std_bx:.4f}')
+    print(f'STD BY : {std_by:.4f}')
+    print(f'STD BZ : {std_bz:.4f}')
+    print(f'STD |B| : {std_magamp:.4f}')
+    
+    print(f'STD mean : {stdmean:.4f}')
+    
+    def mem(pred,target):
+        
+        return np.mean(np.abs(pred)-np.abs(target))
+    
+    mem_bx = mem(df.bswx_pred,df.bswx)
+    mem_by = mem(df.bswy_pred,df.bswy)
+    mem_bz = mem(df.bswz_pred,df.bswz)
+    
+    mem_magamp = mem(df.magsw_pred,df.magsw)
+    
+    memmean = np.mean([mem_bx,mem_by,mem_bz,mem_magamp])
+    
+    print(f'MEM BX : {mem_bx:.4f}')
+    print(f'MEM BY : {mem_by:.4f}')
+    print(f'MEM BZ : {mem_bz:.4f}')
+    print(f'MEM |B| : {mem_magamp:.4f}')
+    
+    print(f'MEM mean : {memmean:.4f}')
     
     
     fig,ax=plt.subplots(2,2)
@@ -1884,32 +2353,31 @@ def r2_analysis():
 
         
         
-    fig,ax=plt.subplots(2,2)
-    df['magsw_emp_pred']=magsw_emp
-    r2_bx=r2_score(df.bswx,df.bx_emp_pred)
+    # fig,ax=plt.subplots(2,2)
+    # r2_bx=r2_score(df.bswx,df.bx_emp_pred)
     
-    r2_by=r2_score(df.bswy,df.by_emp_pred)
+    # r2_by=r2_score(df.bswy,df.by_emp_pred)
     
-    r2_bz=r2_score(df.bswz,df.bz_emp_pred)
-    
+    # r2_bz=r2_score(df.bswz,df.bz_emp_pred)
     
     
-    r2_magamp=r2_score(magsw,magsw_emp)
-    format_plot(ax[0,0],df.bswx,df.bx_emp_pred,colors[0],r2_bx,'IMF $B_X$',-60,60)
-    format_plot(ax[1,0],df.bswy,df.by_emp_pred,colors[1],r2_by,'IMF $B_Y$',-60,60)
-    format_plot(ax[0,1],df.bswz,df.bz_emp_pred,colors[2],r2_bz,'IMF $B_Z$',-60,60)
-    format_plot(ax[1,1],df.magsw,df.magsw_emp_pred,colors[3],r2_magamp,'IMF $|B|$',0,100)
+    
+    # r2_magamp=r2_score(magsw,magsw_emp)
+    # format_plot(ax[0,0],df.bswx,df.bx_emp_pred,colors[0],r2_bx,'IMF $B_X$',-60,60)
+    # format_plot(ax[1,0],df.bswy,df.by_emp_pred,colors[1],r2_by,'IMF $B_Y$',-60,60)
+    # format_plot(ax[0,1],df.bswz,df.bz_emp_pred,colors[2],r2_bz,'IMF $B_Z$',-60,60)
+    # format_plot(ax[1,1],df.magsw,df.magsw_emp_pred,colors[3],r2_magamp,'IMF $|B|$',0,100)
     
 
     
-    rmean=np.mean([r2_bx,r2_by,r2_bz,r2_magamp])
-    print("Empirical Model:")
-    print(f'R2 BX : {r2_bx:.4f}')
-    print(f'R2 BY : {r2_by:.4f}')
-    print(f'R2 BZ : {r2_bz:.4f}')
-    print(f'R2 |B| : {r2_magamp:.4f}')
+    # rmean=np.mean([r2_bx,r2_by,r2_bz,r2_magamp])
+    # print("Empirical Model:")
+    # print(f'R2 BX : {r2_bx:.4f}')
+    # print(f'R2 BY : {r2_by:.4f}')
+    # print(f'R2 BZ : {r2_bz:.4f}')
+    # print(f'R2 |B| : {r2_magamp:.4f}')
     
-    print(f'R2 mean : {rmean:.4f}') 
+    # print(f'R2 mean : {rmean:.4f}') 
     
 
 def r2_analysis_exploration():
@@ -2017,21 +2485,17 @@ def r2_analysis_exploration():
         fig,ax=plt.subplots(1)
         lw=4.0
         si=55
-    
-        #ax.scatter(t_range[0:-1],ar_1,color='blue',s=si)
-        ax.plot(t_range[0:-1],ar_1,color='blue',linewidth=lw,label='IMF BX',alpha=.8)
+        ylabels = ['IMF BX','IMF BY', 'IMF BZ', 'IMF |B|', 'mean']
+        colors = ['blue','green','red','black','grey']
         
-        #ax.scatter(t_range[0:-1],ar_2,color='green',s=si)
-        ax.plot(t_range[0:-1],ar_2,color='green',linewidth=lw,label='IMF BY',alpha=.8)
-        
-        #ax.scatter(t_range[0:-1],ar_3,color='red',s=si)
-        ax.plot(t_range[0:-1],ar_3,color='red',linewidth=lw,label='IMF BZ',alpha=.8)
-        
-        #ax.scatter(t_range[0:-1],ar_4,color='black',s=si)
-        ax.plot(t_range[0:-1],ar_4,color='black',linewidth=lw,label='IMF |B|',alpha=.8)
-        
-        #ax.scatter(t_range[0:-1],ar_5,color='grey',s=si)
-        ax.plot(t_range[0:-1],ar_5,color='grey',linewidth=lw,label='Mean',alpha=.8)
+        ar = [ar_1,ar_2,ar_3,ar_4,ar_5]
+
+        for i, r in enumerate(ar):
+            #ax.scatter(t_range[0:-1],r,color=colors[i],s=si)
+            #ax.plot(t_range[0:-1],r,color=colors[i],linewidth=lw,label=ylabels[i],alpha=.8)
+            ax.stairs(r,t_range,label = ylabels[i],alpha=.8, color= colors[i],linewidth=lw)
+            
+
     
         fs=18
         
@@ -2054,7 +2518,6 @@ def r2_analysis_exploration():
     r2_bx_all,r2_by_all,r2_bz_all,r2_magamp_all,r2_all,bx_error,by_error,bz_error,magsw_error=create_r2_dep_plot(diff,diff,diff,diff,time_range)
     
     format_plot(r2_bx_all,r2_by_all,r2_bz_all,r2_magamp_all,r2_all,'Minutes from Solar Wind','$r^2$ Score',time_range)
-    
     
     
     #format_plot(bx_error,by_error,bz_error,magsw_error,np.mean(np.vstack((bx_error,by_error,bz_error,magsw_error)),axis=0),'Minutes from Solar Wind','Prediction Error',time_range)
@@ -2087,19 +2550,22 @@ def r2_analysis_exploration():
 def angular_difference_distro():
     fs=25
     lw=6
-    def hist_creation_diff(ar,rang,titl,xtitl,c,save=False):
+    import numpy as np
+    fig,ax=plt.subplots(1)
+    
+    def hist_creation_diff(ar,rang,titl,xtitl,c,ax,save=False):
         
-        fig,ax=plt.subplots(1)
+        
         
         counts,bins=np.histogram(ar,bins=36,range=rang)
         
-        ax.hist(bins[:-1],bins,weights=counts/np.size(ar),histtype='step',linewidth=lw,color=c)
+        ax.hist(bins[:-1],bins,weights=counts/np.size(ar),histtype='step',linewidth=lw,color=c,label = titl)
         
         #ax.legend()
         
         ax.set_xticks(np.arange(rang[0],rang[1]+1,round((rang[1]-rang[0])/9)))
         
-        ax.set_title(titl,fontsize=fs)
+        ax.set_title('$|\u03C6_{FNN}-\u03C6_{IMF}|/|\u03C8_{FNN}-\u03C8_{IMF}|$',fontsize=fs)
         
         ax.set_xlabel(xtitl,fontsize=fs)
         
@@ -2114,6 +2580,8 @@ def angular_difference_distro():
             
         ax.tick_params(axis='both', which='major', length=8)
         ax.tick_params(axis='both', which='minor', length=4)
+        
+        ax.legend(fontsize=fs-5)
         
         fname='ensemble_'+titl
         
@@ -2134,7 +2602,6 @@ def angular_difference_distro():
     diff=np.abs(df.magsw-df.magsw_pred)/df.magsw*100
     
     
-    import numpy as np
     ca_sw=np.array([np.arctan2(df.bswy.iloc[i],df.bswz.iloc[i])*180/np.pi for i in range(len(df))])
     ca_ms=np.array([np.arctan2(df.magy.iloc[i],df.magz.iloc[i])*180/np.pi for i in range(len(df))])
     
@@ -2147,6 +2614,8 @@ def angular_difference_distro():
     
     df[['ca_sw','ca_ms','cone_sw','cone_ms','ca_pred','cone_pred']]=np.transpose(np.vstack((ca_sw,ca_ms,cone_sw,cone_ms,ca_pred,cone_pred)))
     
+    
+    
     angular_ca_diff=np.abs(ca_sw-ca_pred)
     angular_cone_diff=np.abs(cone_sw-cone_pred)
     
@@ -2156,11 +2625,13 @@ def angular_difference_distro():
             
         #if angular_cone_diff[i]>90:
             #angular_cone_diff[i]=np.abs(angular_cone_diff[i]-90)
-        
-    hist_creation_diff(angular_ca_diff,[0,180],'$|\u03C8_{FNN}-\u03C8_{IMF}|$','Clock Angle Difference (deg)','mediumpurple')
     
-    hist_creation_diff(angular_cone_diff,[0,180],'$|\u03C6_{FNN}-\u03C6_{IMF}|$','Cone Angle Difference (deg)','orange')
-        
+    hist_creation_diff(angular_cone_diff,[0,180],'Cone Angle Difference','Cone/Clock Angle Difference (deg)','orange',ax)
+    
+    hist_creation_diff(angular_ca_diff,[0,180],'Clock Angle Difference','Cone/Clock Angle Difference (deg)','mediumpurple',ax)
+    
+    breakpoint()
+    
         
 #     #dayside=np.where(np.abs(df.r) < 2)[0]
     print('Percent of |B| diff that falls below 50 % :')
@@ -2199,6 +2670,8 @@ def plot_region_time_series_plots(trange):
         
         ad=pd.read_pickle(save_path+'/fd_prep_w_boundaries.pkl')
         
+        #ad=pd.read_pickle('/Users/bowersch/Desktop/Python_Code/PUB_ANN_Test/fd_prep_w_boundaries.pkl')
+        
         ad_full=ad
         
         ad=ad[((ad.time > start) & (ad.time < end))]
@@ -2233,9 +2706,9 @@ def plot_region_time_series_plots(trange):
         for i in range(len(locations)):
             
         
-            ax[0].scatter(locations[i].ephx,locations[i].ephz-.19,color=colors[i],s=ps,label=labelss[i])
+            ax[0].scatter(locations[i].ephx,locations[i].ephz,color=colors[i],s=ps,label=labelss[i])
             ax[1].scatter(locations[i].ephx,locations[i].ephy,color=colors[i],s=ps,label=labelss[i])
-            ax[2].scatter(locations[i].ephy,locations[i].ephz-.19,color=colors[i],s=ps,label=labelss[i])
+            ax[2].scatter(locations[i].ephy,locations[i].ephz,color=colors[i],s=ps,label=labelss[i])
             
         
         #a=pd.read_pickle('fd_prep_w_boundaries.pkl')
@@ -2301,6 +2774,7 @@ def plot_region_time_series_plots(trange):
         if len(trange2)>1:  
             generate_c_plot(trange,ax_k=ax2[p])
             ax2[len(trange2)-1].set_xlabel('Time',fontsize=fs)
+            ax2.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
             
         else:
             generate_c_plot(trange,ax_k=ax2)
@@ -2624,8 +3098,8 @@ def create_all_meshes_ANN():
             plot_orbit_traj(1.6,1.2,ax[0],'hotpink','MPO Autumn')
             plot_orbit_traj(1.6,1.2,ax[0],'red','MPO Spring',reverse=True)
             
-            plot_orbit_traj(5.78,1.24,ax[0],'aquamarine','Mio Autumn')
-            plot_orbit_traj(5.78,1.24,ax[0],'lime','Mio Spring',reverse=True)
+            plot_orbit_traj(5.78,1.24,ax[0],'darkorange','Mio Autumn')
+            plot_orbit_traj(5.78,1.24,ax[0],'gold','Mio Spring',reverse=True)
             ax[0].legend()
             ax[0].set_ylim(-3.5,3.5)
             ax[0].set_xlim(-3.5,3.5)
@@ -3212,8 +3686,8 @@ def create_all_meshes_ANN():
             plot_orbit_traj(1.6,1.2,ax[0],'hotpink','MPO Winter')
             plot_orbit_traj(1.6,1.2,ax[0],'red','MPO Summer',reverse=True)
             
-            plot_orbit_traj(5.78,1.24,ax[0],'aquamarine','Mio Winter')
-            plot_orbit_traj(5.78,1.24,ax[0],'lime','Mio Summer',reverse=True)
+            plot_orbit_traj(5.78,1.24,ax[0],'darkorange','Mio Winter')
+            plot_orbit_traj(5.78,1.24,ax[0],'gold','Mio Summer',reverse=True)
             ax[0].legend()
             ax[0].set_ylim(-3.5,3.5)
             ax[0].set_xlim(-3.5,3.5)
@@ -3682,7 +4156,7 @@ def shap_analysis():
     
     model=load_model(save_path+'test_model.h5')
     
-    X_val_df=pd.read_pickle('X_val_shap.pkl')
+    #X_val_df=pd.read_pickle('X_val_shap.pkl')
     
     X_train_rs=np.load('X_train_rs_shap.npy')
     
@@ -3717,7 +4191,7 @@ def model_comparison_ca_2_var(trange,no_angle=False,two_plot=False,three_plot=Fa
     
     trange for manuscript: trange = ['2011-06-21 10:38:00', '2011-06-21 11:10:00']
     
-    To make manuscript Figure 3: model_comparison_ca_2_var(trange,no_angle=True,two_plot=True)
+    To make manuscript Figure 3: model_comparison_ca_2_var(trange,no_angle=True,two_plot=True,three_plot=True)
     
     
     
@@ -3730,7 +4204,7 @@ def model_comparison_ca_2_var(trange,no_angle=False,two_plot=False,three_plot=Fa
     '''
     
     
-    fs=22
+    fs=18
     lw=2.5
     ## How to find a trange to check out:
     
@@ -3825,8 +4299,7 @@ def model_comparison_ca_2_var(trange,no_angle=False,two_plot=False,three_plot=Fa
     t=np.where((shift.Type_num != 2) & (df.Type_num==2))[0]
     
         
-        
-    if np.size(t_n)==1:
+    if np.size(t_n)>=1:
         t_n=t_n[0]
         if ((shift_n.Type_num.iloc[t_n]==4) | (shift_n.Type_num.iloc[t_n]==3)):
             index_ms=t_n
@@ -3835,7 +4308,7 @@ def model_comparison_ca_2_var(trange,no_angle=False,two_plot=False,three_plot=Fa
             
 
    
-    if np.size(t)==1:
+    if np.size(t)>=1:
         t=t[0]
         if ((shift.Type_num.iloc[t]==4) | (shift.Type_num.iloc[t]==3)):
             index_ms=t
@@ -3878,9 +4351,13 @@ def model_comparison_ca_2_var(trange,no_angle=False,two_plot=False,three_plot=Fa
                        for a in range(len(df))])
     
             
+    df_full = pd.read_pickle(save_path+'fd_prep_w_boundaries.pkl')
     
+    trange2=[convert_to_datetime(trange[0]),convert_to_datetime(trange[1])]
     
-    diff=df.shift(1)-df
+    df_full = df_full[((df_full.time > trange2[0]) & (df_full.time < trange2[1]))]
+    
+    diff=df_full.shift(1)-df_full
     
     transitions=np.where(diff.Type_num != 0.0)[0]
     
@@ -3896,15 +4373,21 @@ def model_comparison_ca_2_var(trange,no_angle=False,two_plot=False,three_plot=Fa
             fig,ax=plt.subplots(3,sharex=True)
         
             ax[2].set_xlabel(ds,fontsize=fs)
+            
+        #if two_plot==True:
+            
+            #fig,ax = plt.subplots(2,sharex=True)
 
     
     transitions=np.insert(transitions,0,0)
     
-    transitions=np.insert(transitions,np.size(transitions)-1,np.size(df.time)-1)
+    transitions=np.insert(transitions,np.size(transitions)-1,np.size(df_full.time)-1)
     
     transitions=np.sort(transitions)
     filename='dataset_30_diff.pkl'
     a=pd.read_pickle(save_path+filename)
+    
+
     
     time_tt=a.time.to_numpy()
     
@@ -3948,11 +4431,10 @@ def model_comparison_ca_2_var(trange,no_angle=False,two_plot=False,three_plot=Fa
     
     ylabels=["$B_{MSM'}$ (nT)",'Pred IMF (nT)','|B| (nT)','\u03B1 (deg)']#,'Clock Angle (deg)','Cone Angle (deg)']
     
-    
-    shade_in_transitions(transitions,ax[0],df)
-    shade_in_transitions(transitions,ax[1],df)
-    
-    shade_in_transitions(transitions,ax[2],df)
+    for x in ax:
+        
+        shade_in_transitions(transitions,x,df_full)
+
     
     #shade_in_transitions(transitions,ax[3],df)
     
@@ -3960,13 +4442,13 @@ def model_comparison_ca_2_var(trange,no_angle=False,two_plot=False,three_plot=Fa
     
     if no_angle==False:
         
-        shade_in_transitions(transitions,ax[3],df)
-        shade_in_transitions(transitions,ax[4],df)
+        shade_in_transitions(transitions,ax[3],df_full)
+        shade_in_transitions(transitions,ax[4],df_full)
     
     
     ax[0].set_ylim(-60,60)
     ax[1].set_ylim(-60,60)
-    ax[2].set_ylim(0,120)
+    #ax[2].set_ylim(0,120)
     
     
     sigma_level=3
@@ -4060,9 +4542,9 @@ def model_comparison_ca_2_var(trange,no_angle=False,two_plot=False,three_plot=Fa
         ax[4].set_ylim(0,180)
         
                 
-        shade_in_transitions(transitions,ax[3],df)
+        shade_in_transitions(transitions,ax[3],df_full)
         
-        shade_in_transitions(transitions,ax[4],df)
+        shade_in_transitions(transitions,ax[4],df_full)
     
 
     for i in range(len(ax)):
@@ -4086,25 +4568,42 @@ def model_comparison_ca_2_var(trange,no_angle=False,two_plot=False,three_plot=Fa
         
     if two_plot==True:
         
-        fig,ax=plt.subplots(2,sharex=True)
+        fig,ax=plt.subplots(3,sharex=True)
         
-        ax[0].set_ylim(-60,60)
-        ax[0].set_xlim(convert_to_datetime(trange[0]),convert_to_datetime(trange[1]))
+        ax[0].plot(df_full.time,df_full.magx,color='blue',alpha=.7,linewidth=lw-.5,label='$B_{X}$')
+        ax[0].plot(df_full.time,df_full.magy,color='green',alpha=.7,linewidth=lw-.5,label='$B_{Y}$')
+        ax[0].plot(df_full.time,df_full.magz,color='red',alpha=.7,linewidth=lw-.5,label='$B_{Z}$')
+        ax[0].plot(df_full.time,df_full.magamp,color='black',alpha=.7,linewidth=lw-.5,label='|B|')
+        ax[0].set_ylim(-60,130)
         
-        ax[0].plot(df.time,df.magx,color='blue',alpha=.7,linewidth=lw,label='$B_{X}$')
-        ax[0].plot(df.time,df.magy,color='green',alpha=.7,linewidth=lw,label='$B_{Y}$')
-        ax[0].plot(df.time,df.magz,color='red',alpha=.7,linewidth=lw,label='$B_{Z}$')
+        ax[1].set_ylim(-60,130)
+        ax[1].set_xlim(convert_to_datetime(trange[0]),convert_to_datetime(trange[1]))
         
-        ax[0].axhline(y=0,color='black',linestyle='--',linewidth=.5)
+        ax[1].plot(df.time,df.magx,color='blue',alpha=.7,linewidth=lw,label='$B_{X}$')
+        ax[1].plot(df.time,df.magy,color='green',alpha=.7,linewidth=lw,label='$B_{Y}$')
+        ax[1].plot(df.time,df.magz,color='red',alpha=.7,linewidth=lw,label='$B_{Z}$')
+        ax[1].plot(df.time,df.magamp,color='black',alpha=.7,linewidth=lw,label='$|B|$')
         
-        ax[1].plot(df.time,ang_diff,color='black',linewidth=lw,label='\u03B1')
-        ax[1].set_ylim(0,180)
+        ax[1].scatter(df.time,df.magx,color='blue',alpha=.7,s=15)
+        ax[1].scatter(df.time,df.magy,color='green',alpha=.7,s=15)
+        ax[1].scatter(df.time,df.magz,color='red',alpha=.7,s=15)
+        ax[1].scatter(df.time,df.magamp,color='black',alpha=.7,s=15)
         
-        ax[1].axhline(y=30,color='red',linewidth=lw-.5,linestyle='--')
+        ax[1].axhline(y=0,color='black',linestyle='--',linewidth=.5)
         
-        shade_in_transitions(transitions,ax[0],df)
-        shade_in_transitions(transitions,ax[1],df)
-        ax[1].set_xlabel(ds,fontsize=fs)
+        ax[2].plot(df.time,ang_diff,color='black',linewidth=lw,label='\u03B1')
+        ax[2].scatter(df.time,ang_diff,color='black',s=15)
+        ax[2].set_ylim(0,180)
+        
+        ax[2].axhline(y=30,color='red',linewidth=lw-.5,linestyle='--')
+        
+        
+        
+        for x in ax:
+            shade_in_transitions(transitions,x,df_full)
+            
+            
+        ax[2].set_xlabel(ds,fontsize=fs)
         
         
         
@@ -4120,7 +4619,7 @@ def model_comparison_ca_2_var(trange,no_angle=False,two_plot=False,three_plot=Fa
             ax[i].tick_params(axis='both', which='minor', length=4)
             
             
-        ylabels=["$B_{MSM'}$ (nT)",'\u03B1 (deg)']
+        ylabels=["$B_{MSM'}$ (nT)","$B_{MSM'}$ (40 s) (nT)",'\u03B1 (deg)']
         
         for i in range(len(ax)):
             ax[i].set_ylabel(ylabels[i],fontsize=fs)
