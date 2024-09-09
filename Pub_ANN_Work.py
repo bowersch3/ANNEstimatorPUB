@@ -39,7 +39,23 @@ import os
 
 
 
-
+def calculate_normal_vector(curve_points, index):
+    # Get the neighboring points
+    prev_index = (index - 1) % len(curve_points)
+    next_index = (index + 1) % len(curve_points)
+    prev_point = curve_points[prev_index]
+    next_point = curve_points[next_index]
+    
+    # Calculate the tangent vector
+    tangent_vector = next_point - prev_point
+    
+    # Normalize the tangent vector
+    tangent_vector = tangent_vector/ np.linalg.norm(tangent_vector)
+    
+    # Calculate the normal vector
+    normal_vector = np.array([-tangent_vector[1], tangent_vector[0]])
+    
+    return normal_vector   
 
 # Define where the MESSENGER data from the PDS is stored on your machine, used in
 # load_MESSENGER_into_tplot
@@ -643,6 +659,61 @@ def downsample(new_resolution,arr,type_num=False):
     
     return arr_averaged   
 
+def distance_point_to_curve(p, curve,get_point=False):
+
+    """
+    Calculates the distance between a point and a curve.
+
+    Arguments:
+    p -- A tuple or list representing the coordinates of the point (px, py).
+    curve -- A list of tuples or lists representing the points on the curve [(x1, y1), (x2, y2), ...].
+
+    Returns:
+    distance -- The minimum distance between the point and the curve.
+    get_point -- If you want to backout specific the point on the curve that is at 
+    the minimum distance to p
+    """
+
+    # Initialize the minimum distance with a large value
+    min_distance = float('inf')
+    
+    import matplotlib.path as mpl_path
+    import matplotlib.pyplot as plt
+
+    def is_point_inside_curve(curve_points, point):
+        # Create a Path object from the curve points
+        path = mpl_path.Path(curve_points)
+        
+        # Check if the given point lies inside the curve
+        return path.contains_point(point)
+    
+    import numpy as np
+
+    # Iterate over each point on the curve
+    for point in curve:
+        # Calculate the Euclidean distance between the point and the curve point
+        distance = np.sqrt((p[0] - point[0]) ** 2 + (p[1] - point[1]) ** 2)
+
+        # Update the minimum distance if the calculated distance is smaller
+        if distance < np.abs(min_distance):
+            min_distance = distance
+            
+            a=is_point_inside_curve(curve,[p[0],p[1]])
+            
+            cp_r=np.sqrt(point[0]**2+point[1]**2)
+            
+            r=np.sqrt(p[0]**2+p[1]**2)
+            
+            if a==True:
+                min_distance = min_distance*(-1)
+                
+                
+            min_point=point
+    if get_point==False:
+        return min_distance
+    
+    if get_point==True:
+        return min_distance,min_point   
 def generate_SW_MS_dataframe_variance(max_ang_diff):
     ''' Pre-process the data to generate the training/test set from all MESSENGER
         data
@@ -705,6 +776,54 @@ def generate_SW_MS_dataframe_variance(max_ang_diff):
         Rss=rho/((2/(1+np.cos(phi)))**(alpha))
             
         return Rss
+    
+def generate_SW_MS_dataframe_variance(max_ang_diff):
+    ''' Pre-process the data to generate the training/test set from all MESSENGER
+        data
+        
+        This procedure requires Sun 2023 boundary crossing list and a .pkl file of
+        all relavent data for MESSENGER (fd_prep_w_boundaries.pkl)
+    
+        max_ang_diff if the maximum value of alpha, the angle between the measured
+        magnetosheath vector and the reference vector just downstream of the bow shock
+        (max_ang_diff=30 for the manuscript)
+        
+        The function generates the list of IMF targets and the list of magnetosheath
+        features used to train the model
+        
+    '''
+    import numpy as np
+    import datetime
+    import pandas as pd
+    from trying3 import read_in_Weijie_files,convert_to_datetime,convert_to_date_2,convert_to_date_2_utc
+    from scipy.stats import circmean
+    from scipy.optimize import fsolve
+    import logging
+    logging.basicConfig(
+    level=logging.DEBUG,  # Set the log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    format='%(asctime)s - %(levelname)s - %(message)s',)
+
+    # Load in data and produce crossing dataframes
+
+    mp_in, mp_out, bs_in, bs_out = read_in_Weijie_files()
+    
+    #Create magnetopause inbound, outbound and bowshock inbound and outbound
+    # dataframs
+    
+    mi=generate_crossing_dataframe(mp_in,'mpi')
+    
+    mo=generate_crossing_dataframe(mp_out,'mpo')
+    
+    bi=generate_crossing_dataframe(bs_in,'bsi')
+    
+    bo=generate_crossing_dataframe(bs_out,'bso')
+    
+    crossings=[mi,mo,bi,bo]
+    
+    cc=pd.concat(crossings)
+    
+    # Sort to create a pickle of all crossings
+    c=cc.sort_values('s')
         
     def find_r_bs(x_bs,y_bs,z_bs):
         # Used for calculating bow shock standoff distance
@@ -759,6 +878,60 @@ def generate_SW_MS_dataframe_variance(max_ang_diff):
         
         return r_bs_s
     
+    def find_angle_to_bs(x_bs,y_bs,z_bs,bswx,bswy,bswz):
+        ''' Calculate the angle of the IMF to the bow shock to estimate quasi-perp vs quasi-parallel'''
+        
+        psi=1.04
+         
+        p=2.75
+         
+        L=psi*p
+         
+        x0=.5
+         
+        phi = (np.linspace(0,2*np.pi,100))
+        rho = L/(1. + psi*np.cos(phi))
+         
+        xshock = x0 + rho*np.cos(phi)
+        yshock = rho*np.sin(phi)
+
+        curve=np.transpose(np.vstack((xshock,yshock)))
+        
+        ra = np.sqrt(y_bs**2+z_bs**2)
+        
+        da,point=distance_point_to_curve([x_bs,ra],curve,get_point=True)
+        
+        diff=curve-[point[0],point[1]]
+        
+        
+        diff=np.sqrt(diff[:,0]**2+diff[:,1]**2)
+        
+        index=np.where(np.abs(diff)==np.min(np.abs(diff)))[0][0]
+        
+        n=calculate_normal_vector(curve,index)
+        
+        #breakpoint()
+        try:
+            phi_1=np.arccos(np.dot(n,np.array([bswx,np.sqrt(bswy**2+bswz**2)])/np.linalg.norm([bswx,np.sqrt(bswy**2+bswz**2)])))*180/np.pi
+            
+        except:
+            breakpoint()
+        
+        return phi_1
+    
+    def find_r_mp(x_mp,y_mp,z_mp):
+        
+        # Used for calculating magnetopause standoff distance
+        rho=np.sqrt(y_mp**2+z_mp**2+x_mp**2)
+        r=np.sqrt(y_mp**2+z_mp**2)
+        
+        phi=np.arctan2(r,x_mp)
+            
+        alpha=0.5
+        
+        Rss=rho/((2/(1+np.cos(phi)))**(alpha))
+            
+        return Rss
 #     
 # 
     #Downsample data to new resolution and make new downsampled dataframe
@@ -827,7 +1000,7 @@ def generate_SW_MS_dataframe_variance(max_ang_diff):
     
     # Create solar wind dataframe for IMF targets
     
-    sw=pd.DataFrame(columns=['magx','magy','magz','magamp','time','r_bs'])
+    sw=pd.DataFrame(columns=['magx','magy','magz','magamp','time','r_bs','phi_bs'])
     
     # Create magnetosheath dataframe for magnetosheath features
     ms=pd.DataFrame(columns=['magx','magy','magz','magamp','time','x','r','theta','ephx','ephy','ephz','r_mp','alpha'])
@@ -875,7 +1048,7 @@ def generate_SW_MS_dataframe_variance(max_ang_diff):
     
     
     for i in range(np.size(c['s'])-1):
-        
+    #for i in range(30):
         # Loop through all crossings
         
         # Required buffer to make sure no information from IMF is in a magnetosheath
@@ -933,9 +1106,11 @@ def generate_SW_MS_dataframe_variance(max_ang_diff):
                     
                     r_bs_1=find_r_bs(eph_sw[0],eph_sw[1],eph_sw[2])
                     
+                    phi_bs_1 = find_angle_to_bs(eph_sw[0],eph_sw[1],eph_sw[2],mag_sw[0],mag_sw[1],mag_sw[2])
+                    
                     # Add this to the solar wind dataframe
                     
-                    sw.loc[i]=[mag_sw[0],mag_sw[1],mag_sw[2],magamp_sw,sw_time,r_bs_1]
+                    sw.loc[i]=[mag_sw[0],mag_sw[1],mag_sw[2],magamp_sw,sw_time,r_bs_1,phi_bs_1]
                     
                     # Calculate IMF paramters just upstream of the inbound bow shock
                     
@@ -951,9 +1126,13 @@ def generate_SW_MS_dataframe_variance(max_ang_diff):
                     
                     r_bs_1=find_r_bs(eph_sw[0],eph_sw[1],eph_sw[2])
                     
+                    phi_bs_1 = find_angle_to_bs(eph_sw[0],eph_sw[1],eph_sw[2],mag_sw[0],mag_sw[1],mag_sw[2])
+                    
+                    ##breakpoint()
+                    
                     # Add this to the solar wind dataframe
                     
-                    sw.loc[i+1]=[mag_sw[0],mag_sw[1],mag_sw[2],magamp_sw,sw_time,r_bs_1]
+                    sw.loc[i+1]=[mag_sw[0],mag_sw[1],mag_sw[2],magamp_sw,sw_time,r_bs_1,phi_bs_1]
                     
                     
                     
@@ -1215,7 +1394,7 @@ def generate_SW_MS_dataframe_variance(max_ang_diff):
         
         ms=ms.reset_index()
         
-        ms[['bswx','bswy','bswz','magsw','tsw','r_bs','traj']]=False
+        ms[['bswx','bswy','bswz','magsw','tsw','r_bs','traj','phi_bs']]=False
         
         for i in range(len(time_ms)):
             diff=np.abs(time_ms[i]-time_sw)
@@ -1243,13 +1422,13 @@ def generate_SW_MS_dataframe_variance(max_ang_diff):
                 if ((traj_prev!=traj) & (bswx_prev==sw.magx.iloc[gd])):
                     breakpoint()    
             
-            ms.loc[i,['bswx','bswy','bswz','magsw','tsw','r_bs','traj']]=[sw.magx.iloc[gd],sw.magy.iloc[gd],sw.magz.iloc[gd],sw.magamp.iloc[gd],sw.time.iloc[gd],sw.r_bs.iloc[gd],traj]
+            ms.loc[i,['bswx','bswy','bswz','magsw','tsw','r_bs','traj','phi_bs']]=[sw.magx.iloc[gd],sw.magy.iloc[gd],sw.magz.iloc[gd],sw.magamp.iloc[gd],sw.time.iloc[gd],sw.r_bs.iloc[gd],traj,sw.phi_bs.iloc[gd]]
             
             
             
             #print(i/len(time_ms))
             
-        pd.to_pickle(ms,save_path+'dataset_'+str(max_ang_diff)+'_diff.pkl')
+        pd.to_pickle(ms,save_path+'dataset_'+str(max_ang_diff)+'_diff_w_phi.pkl')
     
     ms=generate_SW_MS_combined_dataframe_var(max_ang_diff)
     
@@ -2187,6 +2366,19 @@ def r2_analysis(tree=False):
     '''
     
     df=pd.read_pickle(save_path+'df_attempt_TEST_ensemble_100_models_30deg.pkl')
+    
+    #df = pd.read_pickle('/Users/bowersch/Desktop/Python_Code/ANN_Model_Scripts/ANN_Work/df_attempt_FULL_ensemble_100_models_norm_30deg.pkl')
+    
+    df = pd.read_pickle('/Users/bowersch/Desktop/Python_Code/ANN_Model_Scripts/ANN_Work/df_test_w_phi.pkl')
+    
+    df[['bswx','bswy','bswz','magsw','bswx_pred','bswy_pred','bswz_pred','magsw_pred']] = \
+        df[['bswx_y','bswy_y','bswz_y','magsw_y','bswx_pred_y','bswy_pred_y','bswz_pred_y','magsw_pred_y']]
+        
+    df = df[((df.phi_bs < 45) | (df.phi_bs > 135))]
+        
+    #df = df.dropna()
+    
+    #df = df
     
     if tree==True:
         df=pd.read_pickle(save_path+'df_attempt_TEST_ensemble_300_2rf_models_30deg.pkl')
@@ -4626,7 +4818,148 @@ def model_comparison_ca_2_var(trange,no_angle=False,two_plot=False,three_plot=Fa
             ax[i].legend(loc='upper right',fontsize=fs)
             
             
-
+def create_draping_kf_pred():
+    
+    ''' Create KF predictions of the test set using the Kobel and Fluckiger model '''
+    
+    
+    from trying3 import get_mercury_distance_to_sun
+    
+    #df=pd.read_pickle('/Users/bowersch/Desktop/Python_Code/MESSENGER_Lobe_Analysis/dataset_10_min_lim_40_rmp_rbs.pkl')
+    
+   # df=pd.read_pickle('/Users/bowersch/Desktop/Python_Code/MESSENGER_Lobe_Analysis/dataset_20_min_lim_40_rmp_rbs.pkl')
+    
+    
+    df = pd.read_pickle(save_path + 'df_attempt_TEST_ensemble_100_models_30deg.pkl')
+    
+    
+    #df_w_pred=pd.read_pickle('dataset_10_min_lim_'+str(40)+'w_pred.pkl')
+    
+    # df_w_pred['r_mp']=df['r_mp']
+    # df_w_pred['r_bs']=df['r_bs']
+    
+    # df=df_w_pred
+    
+    def ms_from_imf_3(ephx,ephy,ephz,bswx,bswy,bswz):
         
+        r_mp=1.45
+        
+        r_bs=1.96
+        
+        z = -1*(ephx - r_mp/2)
+        
+        y = ephy
+        
+        x = -ephz
+         
+        r = np.sqrt(x**2+y**2+z**2)
+        
+        imf_bz = -1*bswx
+        
+        imf_by = bswy
+        
+        imf_bx = -bswz
+        
+        
+        vmp = np.sqrt(r_mp)
+        
+        vbs = np.sqrt(2*r_bs-r_mp)
+        
+        bx_dis = 1/(r*(r-z))*(imf_bx*(r-x**2/(r-z)) - \
+                              imf_by*(x*y/(r-z)) +\
+                                      imf_bz*(x/2))
+            
+        by_dis = 1/(r*(r-z))*(-imf_bx*(x*y/(r-z))+\
+                              imf_by*(r-y**2/(r-z))+\
+                                  imf_bz*y/2)
+            
+        bz_dis = (z/r-1)/((r-z)**2)*(-imf_bx*x-imf_by*y+imf_bz*(r-z)/2)
+        
+        ms_bx = imf_bx*(1+vmp**2/(vbs**2-vmp**2))+(vmp**2*vbs**2/(vbs**2-vmp**2))*bx_dis
+        
+        ms_by = imf_by*(1+vmp**2/(vbs**2-vmp**2))+(vmp**2*vbs**2/(vbs**2-vmp**2))*by_dis
+        
+        ms_bz = imf_bz*(1+vmp**2/(vbs**2-vmp**2))+(vmp**2*vbs**2/(vbs**2-vmp**2))*bz_dis
+        
+        return -ms_bz,ms_by,-ms_bx
+    
+    def get_IMF_emp_pred(ephx,ephy,ephz,magx,magy,magz,r_mp,r_bs):
+        
+        from sympy import symbols, Eq, solve
+        
+        z = -1*(ephx - r_mp/2)
+        
+        y = ephy
+        
+        x = -ephz
+        
+        ms_bz = -1 * magx
+        
+        ms_by = magy
+        
+        ms_bx = -1 * magz
 
+        # Define the variables
+        imf_bx, imf_by, imf_bz = symbols('imf_bx imf_by imf_bz')
+        
+        r = np.sqrt(x**2+y**2+z**2)
+        
+        vmp = np.sqrt(r_mp)
+        
+        vbs = np.sqrt(2*r_bs-r_mp)
+        
+        equation_1=Eq(imf_bx*(1+vmp**2/(vbs**2-vmp**2))+(vmp**2*vbs**2/(vbs**2-vmp**2))*\
+                      1/(r*(r-z))*(imf_bx*(r-x**2/(r-z)) - \
+                                      imf_by*(x*y/(r-z)) +\
+                                              imf_bz*(x/2)),ms_bx)
+        
+        equation_2=Eq(imf_by*(1+vmp**2/(vbs**2-vmp**2))+(vmp**2*vbs**2/(vbs**2-vmp**2))*\
+                      1/(r*(r-z))*(-imf_bx*(x*y/(r-z))+\
+                                            imf_by*(r-y**2/(r-z))+\
+                                                imf_bz*y/2),ms_by)
+        
+        equation_3=Eq(imf_bz*(1+vmp**2/(vbs**2-vmp**2))+(vmp**2*vbs**2/(vbs**2-vmp**2))*\
+                      (z/r-1)/((r-z)**2)*(-imf_bx*x-imf_by*y+imf_bz*(r-z)/2),ms_bz)
+        
+        
+        # Solve the system of equations
+        solution = solve((equation_1, equation_2, equation_3), (imf_bx, imf_by, imf_bz))
+        
+        
+        if ((vmp**2 < r-z) & (vbs**2 > r-z)):
+        
+            return -solution[imf_bz],solution[imf_by],-solution[imf_bx]
+        
+        else:
+            
+            return np.nan,np.nan,np.nan
+    bx_full=np.array([])
+    by_full=np.array([])
+    bz_full=np.array([])
+    for i in range(len(df)):
+
+        bx,by,bz=get_IMF_emp_pred(df.ephx.iloc[i],df.ephy.iloc[i],df.ephz.iloc[i],df.magx.iloc[i],df.magy.iloc[i],df.magz.iloc[i],df.r_mp.iloc[i],df.r_bs.iloc[i])
+        bx_full=np.append(bx_full,bx)
+        by_full=np.append(by_full,by)
+        bz_full=np.append(bz_full,bz)
+        
+        print(i/len(df)*100)
+        
+    
+    
+    try:
+        df['bx_emp_pred']=bx_full
+        df['by_emp_pred']=by_full
+        df['bz_emp_pred']=bz_full
+        
+        
+        
+        pd.to_pickle(df,'df_TEST_'+str(30)+'_w_pred.pkl')
+        
+    except:
+        breakpoint()
+        
+    
+    
+    return bx_full,by_full,bz_full
     
